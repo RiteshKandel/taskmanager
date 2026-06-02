@@ -4,7 +4,7 @@ from . import views
 
 import os
 from django.http import JsonResponse
-def debug_db(request): return JsonResponse({'db_len': len(os.environ.get('DATABASE_URL', '')), 'db_prefix': os.environ.get('DATABASE_URL', '')[:15]})
+def debug_db(request): url = os.environ.get('DATABASE_URL', ''); import re; url = re.sub(r':([^:@]+)@', ':***@', url); return JsonResponse({'db_url': url})
 
 urlpatterns = [
     path('debug_db/', debug_db),
