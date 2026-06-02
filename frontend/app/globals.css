@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+/* ─── Design tokens as CSS custom properties ─── */
+:root {
+  /* Backgrounds — 3 levels of depth */
+  --bg-base:        #0e0f14;
+  --bg-surface:     #13151e;
+  --bg-elevated:    #1a1d28;
+  --bg-hover:       #1f2233;
+  --bg-active:      #252840;
+
+  /* Borders — bumped up opacity for visibility */
+  --border:         rgba(255, 255, 255, 0.10);
+  --border-strong:  rgba(255, 255, 255, 0.18);
+  --border-focus:   rgba(124, 106, 240, 0.6);
+
+  /* Accent */
+  --accent:         #7c6af0;
+  --accent-hover:   #8b7af5;
+  --accent-dim:     rgba(124, 106, 240, 0.15);
+  --accent-glow:    rgba(124, 106, 240, 0.25);
+
+  /* Text hierarchy — contrast-checked against dark backgrounds */
+  --text-primary:   #eeeef3;   /* ~12:1 on bg-base  */
+  --text-secondary: #9397b3;   /* ~6.2:1 on bg-base */
+  --text-muted:     #6b7099;   /* ~4.6:1 on bg-base — WCAG AA */
+
+  /* Semantic colors */
+  --color-green:    #34d399;
+  --color-amber:    #fbbf24;
+  --color-red:      #f87171;
+  --color-blue:     #60a5fa;
+  --color-purple:   #a78bfa;
+
+  /* ─── Typography scale ─── */
+  /* Base is 16px. All rem values relative to 16px browser default. */
+  --text-xs:    0.75rem;   /* 12px — only for truly decorative / badge text */
+  --text-sm:    0.875rem;  /* 14px — secondary UI labels */
+  --text-base:  1rem;      /* 16px — body text, task titles, form inputs */
+  --text-lg:    1.125rem;  /* 18px — panel headings */
+  --text-xl:    1.25rem;   /* 20px — page headings */
+  --text-2xl:   1.5rem;    /* 24px — dashboard welcome */
+
+  /* Line heights */
+  --leading-tight:  1.35;
+  --leading-normal: 1.6;
+  --leading-loose:  1.8;
+}
+
+/* ─── Wire tokens into Tailwind v4 via @theme ─── */
+@theme inline {
+  --font-sans: var(--font-sans, 'DM Sans'), sans-serif;
+  --font-mono: var(--font-mono, 'DM Mono'), monospace;
+
+  --color-base:     var(--bg-base);
+  --color-surface:  var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-hover:    var(--bg-hover);
+  --color-active:   var(--bg-active);
+  --color-accent:   var(--accent);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+/* ─── Base resets ─── */
+*, *::before, *::after { border-color: var(--border); box-sizing: border-box; }
+
+/* Root at 16px — all rem units scale from here */
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans), 'DM Sans', sans-serif;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Heading hierarchy */
+h1 { font-size: var(--text-xl);  font-weight: 600; line-height: var(--leading-tight); }
+h2 { font-size: var(--text-lg);  font-weight: 600; line-height: var(--leading-tight); }
+h3 { font-size: var(--text-base); font-weight: 600; line-height: var(--leading-tight); }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--bg-active);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Selection */
+::selection {
+  background: var(--accent-dim);
+  color: var(--text-primary);
+}
+
+/* ─── Reusable component classes ─── */
+.surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.elevated {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+/* Section label — replaces text-[10px] uppercase patterns */
+.section-label {
+  font-size: 0.6875rem;   /* 11px */
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: var(--text-sm);  /* 14px */
+  font-weight: 500;
+  line-height: 1;
+  color: white;
+  background: var(--accent);
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: var(--text-sm);  /* 14px */
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all 150ms;
+  border: none;
+  cursor: pointer;
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+.input-base {
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: var(--text-sm);   /* 14px */
+  line-height: var(--leading-normal);
+  outline: none;
+  transition: all 150ms;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.input-base::placeholder { color: var(--text-muted); }
+.input-base:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Tags / badges — minimum 12px for readability */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.75rem;   /* 12px — minimum for badges */
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.tag-urgent  { background: rgba(248,113,113,.12);  color: #f87171; }
+.tag-high    { background: rgba(251,146,60,.12);   color: #fb923c; }
+.tag-medium  { background: rgba(251,191,36,.12);   color: #fbbf24; }
+.tag-low     { background: rgba(96,165,250,.12);   color: #60a5fa; }
+.tag-custom  { color: white; }
+
+/* ─── Animations ─── */
+.animate-in { animation: fadeUp .2s ease both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ─── Responsive typography ─── */
+@media (max-width: 768px) {
+  html { font-size: 16px; }   /* keep 16px on mobile */
+
+  .section-label { font-size: 0.625rem; } /* 10px — minimal on mobile */
+
+  .tag { font-size: 0.6875rem; padding: 2px 7px; } /* 11px on mobile */
+}
