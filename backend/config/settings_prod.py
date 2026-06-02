@@ -3,7 +3,7 @@ import os
 import dj_database_url
 
 # ── Security ──────────────────────────────────────────────────
-DEBUG = False
+DEBUG = True
 SECRET_KEY = os.environ['SECRET_KEY']   # must be set in Railway env vars
 
 # Railway gives you a domain like your-app.up.railway.app
