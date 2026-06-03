@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, Suspense } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useProject } from '@/lib/hooks/use-projects'
 import type { Task } from '@/lib/hooks/use-tasks'
 import { useTasks, useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks'
@@ -9,6 +10,20 @@ import { ProjectTopbar } from '@/components/projects/ProjectTopbar'
 import { TaskRow } from '@/components/tasks/TaskRow'
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
+
+// Load CalendarView only in the browser — avoids "window is not defined" errors
+const CalendarView = dynamic(
+  () => import('@/components/calendar/CalendarView').then(m => m.CalendarView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full"
+        style={{ color: 'var(--text-muted)' }}>
+        Loading calendar…
+      </div>
+    ),
+  }
+)
 
 // useSearchParams() requires a Suspense boundary in Next.js App Router.
 export default function ProjectPage() {
@@ -27,7 +42,7 @@ function ProjectPageContent() {
   const { id }    = useParams()
   const projectId = Number(id)
   const searchParams = useSearchParams()
-  const view = (searchParams.get('view') || 'list') as 'list' | 'kanban'
+  const view = (searchParams.get('view') || 'list') as 'list' | 'kanban' | 'calendar'
 
   const { data: project }            = useProject(projectId)
   const { data: tasks, isLoading }   = useTasks(projectId)
@@ -63,7 +78,7 @@ function ProjectPageContent() {
       />
 
       <div className="flex-1 overflow-hidden">
-        {view === 'list' ? (
+        {view === 'list' && (
           <ListContent
             tasks={tasks}
             canEdit={canEdit}
@@ -74,7 +89,8 @@ function ProjectPageContent() {
             setSelected={setSelected}
             inputRef={inputRef}
           />
-        ) : (
+        )}
+        {view === 'kanban' && (
           <div className="h-full overflow-hidden">
             <KanbanBoard
               tasks={tasks ?? []}
@@ -83,6 +99,13 @@ function ProjectPageContent() {
               canEdit={canEdit}
             />
           </div>
+        )}
+        {view === 'calendar' && (
+          <CalendarView
+            tasks={tasks ?? []}
+            projectId={projectId}
+            canEdit={canEdit}
+          />
         )}
       </div>
 

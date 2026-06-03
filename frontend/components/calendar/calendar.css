@@ -1,0 +1,183 @@
+/* Import the base RBC styles first */
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+/* ── Override everything to match our dark theme ── */
+
+.rbc-calendar {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans, 'DM Sans', sans-serif);
+  font-size: 12px;
+  height: 100%;
+}
+
+/* Header row (day names) */
+.rbc-header {
+  padding: 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-muted, #4a4e65);
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.07));
+  border-left: 1px solid var(--border, rgba(255,255,255,.07));
+  background: transparent;
+}
+.rbc-header + .rbc-header { border-left: 1px solid var(--border, rgba(255,255,255,.07)); }
+
+/* All grid borders */
+.rbc-day-bg + .rbc-day-bg,
+.rbc-month-row + .rbc-month-row,
+.rbc-time-content,
+.rbc-time-header,
+.rbc-time-header-content,
+.rbc-time-view,
+.rbc-month-view,
+.rbc-agenda-view,
+.rbc-time-gutter .rbc-timeslot-group { border-color: var(--border, rgba(255,255,255,.07)); }
+
+/* Off-range days (prev/next month in month view) */
+.rbc-off-range-bg { background: rgba(255,255,255,.015); }
+.rbc-off-range .rbc-button-link { color: var(--text-muted, #4a4e65); }
+
+/* Today highlight */
+.rbc-today { background: rgba(124,106,240,.04); }
+.rbc-current-time-indicator {
+  background: #f87171;
+  height: 1.5px;
+}
+.rbc-current-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -3px; top: -3px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #f87171;
+}
+
+/* Date numbers in month view */
+.rbc-date-cell { padding: 4px 6px; text-align: right; }
+.rbc-date-cell .rbc-button-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary, #8b8fa8);
+}
+.rbc-date-cell.rbc-now .rbc-button-link {
+  width: 24px; height: 24px;
+  background: #7c6af0;
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Time gutter (hour labels) */
+.rbc-time-gutter .rbc-label {
+  font-size: 10px;
+  color: var(--text-muted, #4a4e65);
+  padding: 0 8px;
+}
+
+/* Time slots */
+.rbc-timeslot-group { border-color: rgba(255,255,255,.04); min-height: 40px; }
+.rbc-time-slot { border-top: 1px solid rgba(255,255,255,.025); }
+.rbc-time-slot:hover { background: rgba(255,255,255,.015); }
+
+/* Day columns */
+.rbc-day-slot .rbc-time-slot { border-top: 1px solid rgba(255,255,255,.025); }
+.rbc-time-column .rbc-timeslot-group:not(:last-child) {
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+
+/* Events — base style (we override per-event in component) */
+.rbc-event {
+  background: rgba(124,106,240,.2);
+  border: none;
+  border-left: 2px solid #7c6af0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #a89cf5;
+  outline: none;
+}
+.rbc-event:focus { outline: none; box-shadow: 0 0 0 2px var(--accent, #7c6af0); }
+.rbc-event.rbc-selected { box-shadow: 0 0 0 2px rgba(124,106,240,.6); }
+
+/* Month view event dots */
+.rbc-event-label { display: none; } /* hide time in month cells */
+
+/* "Show more" link */
+.rbc-show-more {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent, #7c6af0);
+  background: transparent;
+  padding: 1px 4px;
+}
+.rbc-show-more:hover { text-decoration: underline; }
+
+/* Popup (when clicking "show more") */
+.rbc-overlay {
+  background: var(--bg-elevated, #1a1d28);
+  border: 1px solid var(--border-strong, rgba(255,255,255,.12));
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  padding: 8px;
+}
+.rbc-overlay-header {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 6px 8px;
+  border-bottom: 1px solid var(--border, rgba(255,255,255,.07));
+  color: var(--text-primary, #f0f0f5);
+}
+
+/* Toolbar (we build a custom one, hide the default) */
+.rbc-toolbar { display: none; }
+
+/* Selected slot highlight */
+.rbc-slot-selection {
+  background: rgba(124,106,240,.15);
+  border: 1px solid rgba(124,106,240,.4);
+  border-radius: 4px;
+}
+
+/* All-day section — taller, more visible */
+.rbc-allday-cell { min-height: 44px; }
+.rbc-row-bg .rbc-today { background: rgba(124,106,240,.04); }
+.rbc-time-header-gutter { background: transparent; }
+
+/* All-day event chips — bolder and taller */
+.rbc-allday-cell .rbc-event {
+  min-height: 22px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left-width: 3px;
+  opacity: 1;
+  background: rgba(124,106,240,.25);
+}
+.rbc-allday-cell .rbc-event-content {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+/* Larger time slot rows for 2-hour intervals */
+.rbc-timeslot-group { min-height: 64px; }
+
+/* Drag and drop styles */
+.rbc-addons-dnd .rbc-addons-dnd-row-body { position: relative; }
+.rbc-addons-dnd .rbc-addons-dnd-drag-row { position: absolute; top: 0; left: 0; right: 0; }
+.rbc-addons-dnd .rbc-event { transition: opacity 150ms; }
+.rbc-addons-dnd .rbc-addons-dnd-dragged-event { opacity: 0; }
+.rbc-addons-dnd .rbc-addons-dnd-drag-preview {
+  border: 2px dashed var(--accent, #7c6af0) !important;
+  opacity: 0.7;
+}
+.rbc-addons-dnd-resize-ns-icon,
+.rbc-addons-dnd-resize-ew-icon {
+  display: none;
+}

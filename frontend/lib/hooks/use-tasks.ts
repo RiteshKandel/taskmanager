@@ -3,7 +3,7 @@ import api from '../api'
 
 export type Task = {
   id: number; title: string; is_done: boolean; status: string
-  priority: number; due_date: string | null; position: number
+  priority: number; due_date: string | null; start_date: string | null; position: number
   assignees: unknown[]; labels: unknown[]; subtask_count: number
   parent: number | null; project: number; description: string
 }

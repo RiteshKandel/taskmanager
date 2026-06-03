@@ -1,5 +1,6 @@
 from .settings import *   # inherit everything from base settings
 import os
+# pyrefly: ignore [missing-import]
 import dj_database_url
 
 # ── Security ──────────────────────────────────────────────────

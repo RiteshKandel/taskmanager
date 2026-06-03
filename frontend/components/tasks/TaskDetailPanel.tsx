@@ -61,12 +61,23 @@ export function TaskDetailPanel({ task, projectId, onClose }: Props) {
       ),
     },
     {
+      label: 'Start date',
+      content: (
+        <input
+          type="datetime-local"
+          value={detail?.start_date ? detail.start_date.slice(0, 16) : ''}
+          onChange={e => save({ start_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+          style={controlStyle}
+        />
+      ),
+    },
+    {
       label: 'Due date',
       content: (
         <input
-          type="date"
-          value={detail?.due_date ? detail.due_date.slice(0, 10) : ''}
-          onChange={e => save({ due_date: e.target.value || null })}
+          type="datetime-local"
+          value={detail?.due_date ? detail.due_date.slice(0, 16) : ''}
+          onChange={e => save({ due_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
           style={controlStyle}
         />
       ),

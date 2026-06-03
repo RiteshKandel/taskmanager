@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { MembersPanel } from '@/components/members/MembersPanel'
 
 const VIEWS = [
-  { key: 'list',   icon: '≡', label: 'List'  },
-  { key: 'kanban', icon: '⊞', label: 'Board' },
+  { key: 'list',     icon: '≡',  label: 'List'     },
+  { key: 'kanban',   icon: '⊞',  label: 'Board'    },
+  { key: 'calendar', icon: '📅', label: 'Calendar' },
 ]
 
 interface Props {
