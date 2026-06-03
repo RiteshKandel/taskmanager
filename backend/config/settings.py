@@ -144,11 +144,13 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # ── Celery + Redis ────────────────────────────────────────────
-CELERY_BROKER_URL     = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_TIMEZONE       = 'UTC'
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-CELERY_WORKER_POOL    = 'solo'    # Windows: solo pool avoids fork issues
+CELERY_BROKER_URL       = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND   = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_TIMEZONE         = 'UTC'
+CELERY_BEAT_SCHEDULER   = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_WORKER_POOL      = 'solo'        # Windows dev: use solo pool
+CELERY_WORKER_STATE_DB  = None          # Celery 5.6 reads this during CLI init
+CELERY_WORKER_CONCURRENCY = 1           # Celery 5.6 reads this during CLI init
 
 # ── Brevo email ───────────────────────────────────────────────
 BREVO_API_KEY      = os.getenv('BREVO_API_KEY', '')

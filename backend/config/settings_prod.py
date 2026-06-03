@@ -29,3 +29,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 # ── Security headers ──────────────────────────────────────────
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
+
+# ── Celery — override pool for Linux (Railway uses prefork, not solo) ──
+CELERY_WORKER_POOL        = 'prefork'   # Linux supports fork-based workers
+CELERY_WORKER_CONCURRENCY = 2           # 2 parallel workers on Railway
+CELERY_WORKER_STATE_DB    = None        # Celery 5.6 reads this during CLI init
