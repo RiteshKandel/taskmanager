@@ -44,11 +44,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'django_celery_beat',
     # local
     'users',
     'projects',
     'tasks',
     'labels',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -140,3 +142,16 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# ── Celery + Redis ────────────────────────────────────────────
+CELERY_BROKER_URL     = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_TIMEZONE       = 'UTC'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_WORKER_POOL    = 'solo'    # Windows: solo pool avoids fork issues
+
+# ── Brevo email ───────────────────────────────────────────────
+BREVO_API_KEY      = os.getenv('BREVO_API_KEY', '')
+BREVO_SENDER_EMAIL = os.getenv('BREVO_SENDER_EMAIL', '')
+BREVO_SENDER_NAME  = os.getenv('BREVO_SENDER_NAME', 'Task Manager')
+APP_URL            = os.getenv('APP_URL', 'http://localhost:3000')

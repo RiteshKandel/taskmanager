@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { useTask, useUpdateTask } from '@/lib/hooks/use-tasks'
 import type { Task } from '@/lib/hooks/use-tasks'
+import { ReminderPicker } from './ReminderPicker'
+import { usePermissions } from '@/lib/hooks/use-members'
 
 interface Props {
   task: Task
@@ -12,6 +14,7 @@ interface Props {
 export function TaskDetailPanel({ task, projectId, onClose }: Props) {
   const { data: detail } = useTask(task.id)
   const updateTask = useUpdateTask(projectId)
+  const { canEdit } = usePermissions(projectId)
   const [title, setTitle] = useState(task.title)
 
   const save = (field: Partial<Task>) =>
@@ -80,6 +83,12 @@ export function TaskDetailPanel({ task, projectId, onClose }: Props) {
           onChange={e => save({ due_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
           style={controlStyle}
         />
+      ),
+    },
+    {
+      label: 'Reminder',
+      content: (
+        <ReminderPicker taskId={task.id} canEdit={canEdit ?? false} />
       ),
     },
   ]
