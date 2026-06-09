@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from 'react-hot-toast'
-import { notify } from '@/lib/toast'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -13,16 +12,10 @@ function makeQueryClient() {
         retry:               1,      // retry once before surfacing an error
         staleTime:           30_000, // cache for 30 s
         refetchOnWindowFocus: false,  // don't refetch when tab regains focus
+        throwOnError:         false,  // never throw on query refetch errors
       },
-      mutations: {
-        onError: (error: unknown) => {
-          // Global mutation error handler — fires only when a component has no onError
-          const status = (error as { response?: { status?: number } })?.response?.status
-          if (status === 403) return // already handled in api.ts interceptor
-          if (status === 401) return // handled by token refresh logic
-          notify.error()             // generic fallback toast
-        },
-      },
+      // No global mutation onError — each mutation hook has its own specific error handler.
+      // A global handler here fires IN ADDITION TO individual handlers, causing duplicate toasts.
     },
   })
 }

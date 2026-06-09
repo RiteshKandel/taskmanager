@@ -29,10 +29,10 @@ api.interceptors.response.use(
     const status = error.response?.status
 
     // Show targeted toasts for specific HTTP errors
+    // Note: 500 errors are NOT toasted here — individual mutation onError handlers
+    // take care of those to avoid duplicate "Server error" + "Something went wrong" toasts.
     if (status === 403) {
       notify.permError()
-    } else if (status === 500) {
-      notify.error('Server error — try again in a moment')
     } else if (!error.response) {
       notify.networkError()
     }
