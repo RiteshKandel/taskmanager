@@ -1,6 +1,11 @@
-from rest_framework.routers import DefaultRouter
-from .views import TaskViewSet
+from rest_framework_nested import routers
+from .views import TaskViewSet, AttachmentViewSet, CommentViewSet
 
-router = DefaultRouter()
+router = routers.DefaultRouter()
 router.register(r'tasks', TaskViewSet, basename='task')
-urlpatterns = router.urls
+
+tasks_router = routers.NestedDefaultRouter(router, r'tasks', lookup='task')
+tasks_router.register(r'attachments', AttachmentViewSet, basename='task-attachments')
+tasks_router.register(r'comments',    CommentViewSet,    basename='task-comments')
+
+urlpatterns = router.urls + tasks_router.urls

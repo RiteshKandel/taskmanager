@@ -1,102 +1,123 @@
 'use client'
-import { useState } from 'react'
-import { AxiosError } from 'axios'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
+import { notify } from '@/lib/toast'
+
+// ── Validation schema ──
+const loginSchema = z.object({
+  email:    z.string().email('Enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+})
+type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-
   const { login } = useAuth()
+  const router    = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) })
+
+  const onSubmit = async (data: LoginForm) => {
     try {
-      await login(email, password)
+      await login(data.email, data.password)
       router.replace('/dashboard')
-    } catch (err) {
-      const axiosError = err as AxiosError<{detail?: string}>
-      setError(axiosError.response?.data?.detail || 'Invalid email or password')
-    } finally {
-      setLoading(false)
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      if (msg?.toLowerCase().includes('credential') || msg?.toLowerCase().includes('password')) {
+        setError('password', { message: 'Incorrect email or password' })
+      } else {
+        notify.error(msg || 'Login failed')
+      }
     }
   }
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center"
+      className="min-h-screen flex items-center justify-center p-4"
       style={{ background: 'var(--bg-base)' }}
     >
       <div
-        className="p-8 rounded-[20px] w-full max-w-md"
+        className="w-full max-w-md rounded-[20px] p-8"
         style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          boxShadow: '0 25px 50px rgba(0,0,0,.3)',
+          background:  'var(--bg-surface)',
+          border:      '1px solid var(--border)',
+          boxShadow:   '0 25px 50px rgba(0,0,0,.3)',
         }}
       >
         <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
           Sign in
         </h1>
-        <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm mb-7" style={{ color: 'var(--text-secondary)' }}>
           Welcome back to Task Manager
         </p>
 
-        {error && (
-          <div
-            className="text-sm p-3 rounded-[10px] mb-4"
-            style={{ background: 'rgba(248,113,113,.1)', color: '#f87171' }}
-          >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+          {/* Email field */}
           <div>
             <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'var(--text-primary)' }}
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
             >
               Email
             </label>
             <input
+              {...register('email')}
               type="email"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="input-base"
               placeholder="you@example.com"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
+              style={{
+                background: 'var(--bg-active)',
+                border:     `1px solid ${errors.email ? 'rgba(248,113,113,.5)' : 'var(--border)'}`,
+                color:      'var(--text-primary)',
+              }}
             />
+            {errors.email && (
+              <p className="text-xs mt-1.5" style={{ color: '#f87171' }}>
+                ⚠ {errors.email.message}
+              </p>
+            )}
           </div>
+
+          {/* Password field */}
           <div>
             <label
-              className="block text-sm font-medium mb-1"
-              style={{ color: 'var(--text-primary)' }}
+              className="block text-xs font-semibold uppercase tracking-wider mb-1.5"
+              style={{ color: 'var(--text-secondary)' }}
             >
               Password
             </label>
             <input
+              {...register('password')}
               type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="input-base"
               placeholder="••••••••"
+              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all"
+              style={{
+                background: 'var(--bg-active)',
+                border:     `1px solid ${errors.password ? 'rgba(248,113,113,.5)' : 'var(--border)'}`,
+                color:      'var(--text-primary)',
+              }}
             />
+            {errors.password && (
+              <p className="text-xs mt-1.5" style={{ color: '#f87171' }}>
+                ⚠ {errors.password.message}
+              </p>
+            )}
           </div>
+
           <button
             type="submit"
-            disabled={loading}
-            className="btn-primary w-full justify-center"
+            disabled={isSubmitting}
+            className="btn-primary w-full justify-center mt-2"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, Suspense } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { useProject } from '@/lib/hooks/use-projects'
 import type { Task } from '@/lib/hooks/use-tasks'
@@ -10,6 +11,10 @@ import { ProjectTopbar } from '@/components/projects/ProjectTopbar'
 import { TaskRow } from '@/components/tasks/TaskRow'
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
+import { TaskListSkeleton, KanbanSkeleton, TopbarSkeleton } from '@/components/tasks/TaskListSkeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 // Load CalendarView only in the browser — avoids "window is not defined" errors
 const CalendarView = dynamic(
@@ -43,11 +48,12 @@ function ProjectPageContent() {
   const projectId = Number(id)
   const searchParams = useSearchParams()
   const view = (searchParams.get('view') || 'list') as 'list' | 'kanban' | 'calendar'
+  const qc = useQueryClient()
 
-  const { data: project }            = useProject(projectId)
-  const { data: tasks, isLoading }   = useTasks(projectId)
-  const { canEdit, canManage, role } = usePermissions(projectId)
-  const { data: members = [] }       = useMembers(projectId)
+  const { data: project }                          = useProject(projectId)
+  const { data: tasks, isLoading, isError, refetch } = useTasks(projectId)
+  const { canEdit, canManage, role }               = usePermissions(projectId)
+  const { data: members = [] }                     = useMembers(projectId)
   const memberCount = Array.isArray(members) ? members.length : 0
   const createTask = useCreateTask(projectId)
   const updateTask = useUpdateTask(projectId)
@@ -66,7 +72,20 @@ function ProjectPageContent() {
     updateTask.mutate({ id: task.id, is_done: !task.is_done })
 
   if (isLoading)
-    return <div className="p-8" style={{ color: 'var(--text-muted)' }}>Loading…</div>
+    return (
+      <div className="h-full flex flex-col" style={{ background: 'var(--bg-base)' }}>
+        <TopbarSkeleton />
+        {view === 'kanban' ? <KanbanSkeleton /> : <TaskListSkeleton />}
+      </div>
+    )
+
+  if (isError)
+    return (
+      <div className="h-full flex flex-col" style={{ background: 'var(--bg-base)' }}>
+        <TopbarSkeleton />
+        <ErrorState onRetry={() => refetch()} />
+      </div>
+    )
 
   return (
     <div className="h-full flex flex-col" style={{ background: 'var(--bg-base)' }}>
@@ -78,35 +97,37 @@ function ProjectPageContent() {
       />
 
       <div className="flex-1 overflow-hidden">
-        {view === 'list' && (
-          <ListContent
-            tasks={tasks}
-            canEdit={canEdit}
-            newTitle={newTitle}
-            setNewTitle={setNewTitle}
-            handleAddTask={handleAddTask}
-            toggleDone={toggleDone}
-            setSelected={setSelected}
-            inputRef={inputRef}
-          />
-        )}
-        {view === 'kanban' && (
-          <div className="h-full overflow-hidden">
-            <KanbanBoard
+        <ErrorBoundary onReset={() => qc.invalidateQueries()}>
+          {view === 'list' && (
+            <ListContent
+              tasks={tasks}
+              canEdit={canEdit}
+              newTitle={newTitle}
+              setNewTitle={setNewTitle}
+              handleAddTask={handleAddTask}
+              toggleDone={toggleDone}
+              setSelected={setSelected}
+              inputRef={inputRef}
+            />
+          )}
+          {view === 'kanban' && (
+            <div className="h-full overflow-hidden">
+              <KanbanBoard
+                tasks={tasks ?? []}
+                projectId={projectId}
+                onOpenTask={setSelected}
+                canEdit={canEdit}
+              />
+            </div>
+          )}
+          {view === 'calendar' && (
+            <CalendarView
               tasks={tasks ?? []}
               projectId={projectId}
-              onOpenTask={setSelected}
               canEdit={canEdit}
             />
-          </div>
-        )}
-        {view === 'calendar' && (
-          <CalendarView
-            tasks={tasks ?? []}
-            projectId={projectId}
-            canEdit={canEdit}
-          />
-        )}
+          )}
+        </ErrorBoundary>
       </div>
 
       {selectedTask && (
@@ -178,27 +199,16 @@ function ListContent({
         </div>
       )}
 
-      {tasks?.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
-            style={{ background: 'var(--bg-elevated)' }}
-          >
-            <span className="text-3xl">📝</span>
-          </div>
-          <h3
-            className="mb-2"
-            style={{ color: 'var(--text-primary)', fontSize: '1.125rem' }}
-          >
-            No tasks yet
-          </h3>
-          <p
-            className="max-w-sm"
-            style={{ color: 'var(--text-secondary)', fontSize: '0.9375rem', lineHeight: 1.6 }}
-          >
-            Get started by adding a task above to keep track of what needs to be done.
-          </p>
-        </div>
+      {openTasks.length === 0 && doneTasks.length === 0 ? (
+        <EmptyState
+          icon="📋"
+          title="No tasks yet"
+          description="Add your first task to start tracking your work."
+          action={canEdit ? {
+            label:   '+ Add your first task',
+            onClick: () => inputRef.current?.focus(),
+          } : undefined}
+        />
       ) : (
         <>
           {openTasks.length > 0 && (

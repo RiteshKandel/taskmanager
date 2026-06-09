@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context'
 import { useProjectTree } from '@/lib/hooks/use-projects'
 import { ProjectTreeItem } from '@/components/projects/ProjectTreeItem'
 import { NewProjectModal } from '@/components/projects/NewProjectModal'
+import { SidebarSkeleton } from '@/components/tasks/TaskListSkeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout }      = useAuth()
@@ -73,26 +75,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="px-2 pb-4">
             {isLoading ? (
-              <div className="space-y-1 px-2">
-                {[1, 2, 3].map(i => (
-                  <div
-                    key={i}
-                    className="h-7 rounded-[14px] animate-pulse"
-                    style={{ background: 'var(--bg-elevated)' }}
-                  />
-                ))}
-              </div>
+              <SidebarSkeleton />
             ) : tree.length === 0 ? (
-              <div className="px-3 py-4 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No projects yet</p>
-                <button
-                  onClick={() => { setModalParent(null); setModalOpen(true) }}
-                  className="mt-2 text-sm transition-colors"
-                  style={{ color: 'var(--accent)' }}
-                >
-                  + Create first project
-                </button>
-              </div>
+              <EmptyState
+                icon="📁"
+                title="No projects yet"
+                description="Create your first project to get started."
+                action={{ label: '+ Create project', onClick: () => { setModalParent(null); setModalOpen(true) } }}
+              />
             ) : (
               tree.filter((p: any) => !p.is_archived).map((p: any) => (
                 <ProjectTreeItem

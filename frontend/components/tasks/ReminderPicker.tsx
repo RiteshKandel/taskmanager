@@ -16,60 +16,77 @@ function getPresets() {
 interface Props { taskId: number; canEdit: boolean }
 
 export function ReminderPicker({ taskId, canEdit }: Props) {
-  const { data: reminder }     = useReminder(taskId)
-  const setReminder            = useSetReminder(taskId)
-  const deleteReminder         = useDeleteReminder(taskId)
-  const [showPicker, setShow]  = useState(false)
+  const { data: reminders }     = useReminder(taskId)
+  const setReminder             = useSetReminder(taskId)
+  const deleteReminder          = useDeleteReminder(taskId)
+  const [showPicker, setShow]   = useState(false)
   const [customTime, setCustom] = useState('')
 
   const btnStyle = (active: boolean): React.CSSProperties => ({
-    background: active ? 'rgba(124,106,240,.15)' : 'var(--bg-elevated)',
-    color:      active ? '#a89cf5' : 'var(--text-secondary)',
-    border:     `1px solid ${active ? 'rgba(124,106,240,.4)' : 'var(--border)'}`,
+    background:   active ? 'rgba(124,106,240,.15)' : 'var(--bg-elevated)',
+    color:        active ? '#a89cf5' : 'var(--text-secondary)',
+    border:       `1px solid ${active ? 'rgba(124,106,240,.4)' : 'var(--border)'}`,
     borderRadius: '8px',
-    padding: '6px 10px',
-    fontSize: '12px',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'all .15s',
+    padding:      '6px 10px',
+    fontSize:     '12px',
+    fontWeight:   '500',
+    cursor:       'pointer',
+    transition:   'all .15s',
   })
+
+  const handleSet = (isoTime: string) => {
+    setReminder.mutate(isoTime)
+    setShow(false)
+    setCustom('')
+  }
 
   return (
     <div>
-      {/* Current reminder display */}
-      {reminder ? (
-        <div className="flex items-center gap-2">
-          <span className="text-xs px-2.5 py-1 rounded-md font-medium"
-            style={{
-              background: reminder.sent ? 'var(--bg-active)' : 'rgba(124,106,240,.12)',
-              color: reminder.sent ? 'var(--text-muted)' : '#a89cf5',
-            }}>
-            ⏰ {format(new Date(reminder.reminder_time), 'MMM d · h:mm a')}
-            {reminder.sent && ' · sent'}
-          </span>
-          {canEdit && !reminder.sent && (
-            <button
-              onClick={() => deleteReminder.mutate()}
-              className="text-xs transition-colors"
-              style={{ color: 'var(--text-muted)' }}
-              title="Remove reminder">
-              ✕
-            </button>
+      {/* Current reminders display */}
+      {reminders && reminders.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {reminders.map(reminder => (
+            <div key={reminder.id} className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs px-2.5 py-1 rounded-md font-medium"
+                style={{
+                  background: reminder.sent ? 'rgba(139,143,168,.1)' : 'rgba(124,106,240,.12)',
+                  color:      reminder.sent ? 'var(--text-muted)'     : '#a89cf5',
+                }}>
+                ⏰ {format(new Date(reminder.reminder_time), 'MMM d · h:mm a')}
+                {reminder.sent && <span className="ml-1 text-[9px] opacity-70">· sent</span>}
+              </span>
+
+              {canEdit && (
+                <button onClick={() => deleteReminder.mutate(reminder.id)}
+                  className="text-xs transition-colors"
+                  style={{ color: 'var(--text-muted)' }}
+                  title="Remove reminder">
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+
+          {canEdit && (
+             <button onClick={() => setShow(p => !p)}
+               className="text-xs flex items-center gap-1.5 transition-colors mt-1"
+               style={{ color: showPicker ? '#a89cf5' : 'var(--text-muted)' }}>
+               ⏰ {showPicker ? 'Close' : '+ Add reminder'}
+             </button>
           )}
         </div>
       ) : canEdit ? (
-        <button
-          onClick={() => setShow(p => !p)}
+        <button onClick={() => setShow(p => !p)}
           className="text-xs flex items-center gap-1.5 transition-colors"
           style={{ color: showPicker ? '#a89cf5' : 'var(--text-muted)' }}>
           ⏰ {showPicker ? 'Close' : 'Set reminder'}
         </button>
       ) : (
-        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>No reminder</span>
+        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>No reminders</span>
       )}
 
       {/* Picker panel */}
-      {showPicker && (
+      {showPicker && canEdit && (
         <div className="mt-2 p-3 rounded-xl space-y-3"
           style={{ background: 'var(--bg-active)', border: '1px solid var(--border)' }}>
 
@@ -79,7 +96,7 @@ export function ReminderPicker({ taskId, canEdit }: Props) {
           <div className="grid grid-cols-2 gap-1.5">
             {getPresets().map(p => (
               <button key={p.label}
-                onClick={() => { setReminder.mutate(p.value); setShow(false) }}
+                onClick={() => handleSet(p.value)}
                 style={btnStyle(false)}
                 className="text-left">
                 {p.label}
@@ -95,9 +112,9 @@ export function ReminderPicker({ taskId, canEdit }: Props) {
                 onChange={e => setCustom(e.target.value)}
                 className="flex-1 text-xs rounded-lg px-2.5 py-1.5 outline-none"
                 style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-                         color: 'var(--text-primary)' }} />
+                         color: 'var(--text-primary)', colorScheme: 'dark' }} />
               <button
-                onClick={() => { if (customTime) { setReminder.mutate(new Date(customTime).toISOString()); setShow(false); setCustom('') }}}
+                onClick={() => customTime && handleSet(new Date(customTime).toISOString())}
                 disabled={!customTime}
                 className="text-xs px-3 py-1.5 rounded-lg font-semibold disabled:opacity-40 transition-all"
                 style={{ background: 'var(--accent)', color: 'white' }}>

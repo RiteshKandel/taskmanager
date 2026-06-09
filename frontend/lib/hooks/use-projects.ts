@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../api'
+import { notify } from '@/lib/toast'
 
 // Flat project shape returned by the list and detail endpoints
 export type Project = {
@@ -66,7 +67,11 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (data: { title: string; color?: string; parent?: number | null }) =>
       api.post('/projects/', data).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      notify.projectCreated()
+    },
+    onError: () => notify.error('Failed to create project'),
   })
 }
 
@@ -78,7 +83,9 @@ export function useUpdateProject() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['projects'] })
       qc.invalidateQueries({ queryKey: ['projects', vars.id] })
+      notify.projectUpdated()
     },
+    onError: () => notify.error('Failed to update project'),
   })
 }
 
@@ -86,6 +93,10 @@ export function useDeleteProject() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => api.delete(`/projects/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      notify.projectDeleted()
+    },
+    onError: () => notify.error('Failed to delete project'),
   })
 }

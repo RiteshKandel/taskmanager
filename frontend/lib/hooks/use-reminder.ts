@@ -11,7 +11,7 @@ export type Reminder = {
 export function useReminder(taskId: number) {
   return useQuery({
     queryKey: ['reminder', taskId],
-    queryFn: () => api.get(`/tasks/${taskId}/reminder/`).then(r => r.data as Reminder | null),
+    queryFn: () => api.get(`/tasks/${taskId}/reminder/`).then(r => r.data as Reminder[]),
     enabled: !!taskId,
   })
 }
@@ -28,7 +28,7 @@ export function useSetReminder(taskId: number) {
 export function useDeleteReminder(taskId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => api.delete(`/tasks/${taskId}/reminder/`),
+    mutationFn: (reminderId: number) => api.delete(`/tasks/${taskId}/reminder/${reminderId}/`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['reminder', taskId] }),
   })
 }

@@ -1,7 +1,23 @@
 from rest_framework import serializers
+import bleach
 from .models import Task
 from users.serializers import UserSerializer
 from projects.serializers import LabelSerializer
+
+# Tags and attributes Tiptap is allowed to produce
+ALLOWED_TAGS = [
+    'p', 'br', 'strong', 'em', 's', 'u', 'code', 'pre',
+    'h1', 'h2', 'h3', 'h4',
+    'ul', 'ol', 'li',
+    'blockquote', 'hr',
+    'a', 'img',
+]
+ALLOWED_ATTRS = {
+    'a':   ['href', 'title', 'target'],
+    'img': ['src', 'alt', 'width', 'height'],
+    'li':  ['data-checked'],     # for task list items
+    'ul':  ['data-type'],        # for taskList type
+}
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -47,3 +63,9 @@ class TaskDetailSerializer(serializers.ModelSerializer):
                   'assignees', 'assignee_ids', 'labels', 'label_ids',
                   'subtasks', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+    def validate_description(self, value: str) -> str:
+        # Strip any unsafe HTML before saving to the database
+        if not value:
+            return value
+        return bleach.clean(value, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS)

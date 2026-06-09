@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../api'
+import { notify } from '@/lib/toast'
 
 export type Role = 'owner' | 'admin' | 'editor' | 'viewer'
 
@@ -48,7 +49,11 @@ export function useAddMember(projectId: number) {
   return useMutation({
     mutationFn: (data: { email: string; role: Role }) =>
       api.post(`/projects/${projectId}/members/`, data).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', projectId] }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ['members', projectId] })
+      notify.memberAdded(data?.user?.name || 'Member')
+    },
+    onError: () => notify.error('Failed to add member'),
   })
 }
 
@@ -57,7 +62,11 @@ export function useUpdateMemberRole(projectId: number) {
   return useMutation({
     mutationFn: ({ memberId, role }: { memberId: number; role: Role }) =>
       api.patch(`/projects/${projectId}/members/${memberId}/`, { role }).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', projectId] })
+      notify.roleUpdated()
+    },
+    onError: () => notify.error('Failed to update role'),
   })
 }
 
@@ -66,6 +75,10 @@ export function useRemoveMember(projectId: number) {
   return useMutation({
     mutationFn: (memberId: number) =>
       api.delete(`/projects/${projectId}/members/${memberId}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', projectId] })
+      notify.memberRemoved('Member')
+    },
+    onError: () => notify.error('Failed to remove member'),
   })
 }

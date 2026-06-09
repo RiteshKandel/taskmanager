@@ -29,7 +29,7 @@ export function KanbanColumn({ column, tasks, projectId, onOpenTask }: KanbanCol
   }
 
   return (
-    <div className="flex flex-col w-80 flex-shrink-0">
+    <div className="flex flex-col w-80 flex-shrink-0 h-full">
       {/* Column header */}
       <div className="flex items-center gap-2 mb-3 px-1">
         <span
@@ -55,7 +55,7 @@ export function KanbanColumn({ column, tasks, projectId, onOpenTask }: KanbanCol
       {/* Droppable area */}
       <div
         ref={setNodeRef}
-        className="flex-1 flex flex-col gap-1.5 p-2 rounded-[20px] min-h-[200px] transition-colors"
+        className="flex-1 flex flex-col gap-1.5 p-2 rounded-[20px] min-h-[200px] transition-colors overflow-y-auto"
         style={{
           background: isOver ? 'var(--accent-dim)' : 'var(--bg-surface)',
           border: `1px solid ${isOver ? 'var(--accent)' : 'var(--border)'}`,

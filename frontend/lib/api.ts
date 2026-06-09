@@ -1,4 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios'
+import { notify } from '@/lib/toast'
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
@@ -25,7 +26,18 @@ api.interceptors.response.use(
       || url.includes('/auth/refresh/') || url.includes('/auth/logout/') || url.includes('/auth/me/')
     if (isAuthEndpoint) return Promise.reject(error)
 
-    if (error.response?.status === 401 && !original._retry) {
+    const status = error.response?.status
+
+    // Show targeted toasts for specific HTTP errors
+    if (status === 403) {
+      notify.permError()
+    } else if (status === 500) {
+      notify.error('Server error — try again in a moment')
+    } else if (!error.response) {
+      notify.networkError()
+    }
+
+    if (status === 401 && !original._retry) {
       original._retry = true
       try {
         if (typeof window !== 'undefined') {

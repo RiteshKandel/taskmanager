@@ -22,7 +22,6 @@ class TaskReminder(models.Model):
     created_at    = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['task', 'user']
         ordering = ['reminder_time']
 
     def __str__(self):

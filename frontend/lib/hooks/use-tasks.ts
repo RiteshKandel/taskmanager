@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../api'
+import { notify } from '@/lib/toast'
 
 export type Task = {
   id: number; title: string; is_done: boolean; status: string
@@ -28,7 +29,11 @@ export function useCreateTask(projectId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (data: Partial<Task>) => api.post('/tasks/', { ...data, project: projectId }).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      notify.taskCreated()
+    },
+    onError: () => notify.error('Failed to create task'),
   })
 }
 
@@ -40,7 +45,14 @@ export function useUpdateTask(projectId: number) {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['tasks', projectId] })
       qc.invalidateQueries({ queryKey: ['tasks', 'detail', vars.id] })
+      // Only toast for explicit content updates, not checkbox/position-only changes
+      if (vars.is_done === true) {
+        notify.taskCompleted()
+      } else if (vars.title !== undefined || vars.description !== undefined) {
+        notify.taskUpdated()
+      }
     },
+    onError: () => notify.error(),
   })
 }
 
@@ -48,7 +60,11 @@ export function useDeleteTask(projectId: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => api.delete(`/tasks/${id}/`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['tasks', projectId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tasks', projectId] })
+      notify.taskDeleted()
+    },
+    onError: () => notify.error('Failed to delete task'),
   })
 }
 export function useBulkUpdateTasks(projectId: number) {
