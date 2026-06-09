@@ -21,6 +21,7 @@ DATABASES = {
 # ── Static files — whitenoise serves them ─────────────────────
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+os.makedirs(STATIC_ROOT, exist_ok=True)
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ── CORS — allow your Vercel frontend ─────────────────────────
