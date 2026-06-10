@@ -4,8 +4,10 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { useProjectTree } from '@/lib/hooks/use-projects'
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
 import { ProjectTreeItem } from '@/components/projects/ProjectTreeItem'
 import { NewProjectModal } from '@/components/projects/NewProjectModal'
+import { CommandPalette } from '@/components/search/CommandPalette'
 import { SidebarSkeleton } from '@/components/tasks/TaskListSkeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 
@@ -15,7 +17,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname              = usePathname()
   const [modalParent, setModalParent] = useState<number | null>(null)
   const [modalOpen, setModalOpen]     = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2) || '?'
+
+  // Ctrl+K opens the command palette from anywhere in the dashboard
+  useKeyboardShortcuts({
+    'ctrl+k': () => setPaletteOpen(p => !p),
+  })
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-base)' }}>
@@ -47,6 +55,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {user?.email}
             </p>
           </div>
+        </div>
+
+        {/* Search button */}
+        <div className="px-2 pt-2.5 pb-1">
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-left transition-all"
+            style={{
+              background: 'var(--bg-elevated)',
+              border:     '1px solid var(--border)',
+              color:      'var(--text-muted)',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'rgba(124,106,240,.35)'
+              e.currentTarget.style.background  = 'var(--bg-active)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border)'
+              e.currentTarget.style.background  = 'var(--bg-elevated)'
+            }}
+          >
+            <span className="text-sm">🔍</span>
+            <span className="flex-1 text-xs" style={{ color: 'var(--text-muted)' }}>Search…</span>
+            <kbd
+              className="text-[9px] font-mono px-1.5 py-0.5 rounded"
+              style={{
+                background: 'var(--bg-active)',
+                color:      'var(--text-muted)',
+                border:     '1px solid var(--border-strong)',
+              }}
+            >
+              Ctrl K
+            </kbd>
+          </button>
         </div>
 
         {/* Nav */}
@@ -98,6 +140,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* User footer */}
         <div className="p-2" style={{ borderTop: '1px solid var(--border)' }}>
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-[14px] transition-colors mb-1 text-sm"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <span className="text-base">⚙</span>
+            <span>Settings</span>
+          </Link>
           <button
             onClick={logout}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[14px] transition-colors text-left"
@@ -105,12 +155,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, var(--accent), #a78bfa)' }}
-            >
-              {initials}
-            </div>
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt="avatar"
+                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, var(--accent), #a78bfa)' }}
+              >
+                {initials}
+              </div>
+            )}
             <span className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{user?.name}</span>
           </button>
         </div>
@@ -123,6 +181,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           defaultParentId={modalParent}
           onClose={() => setModalOpen(false)}
         />
+      )}
+
+      {/* Command palette — rendered at root level so it overlays everything */}
+      {paletteOpen && (
+        <CommandPalette onClose={() => setPaletteOpen(false)} />
       )}
     </div>
   )

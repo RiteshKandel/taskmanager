@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
+from tasks.search_views import GlobalSearchView
 
 def health_check(request):
     return JsonResponse({'status': 'ok'})
@@ -26,6 +27,7 @@ def health_check(request):
 urlpatterns = [
     path('admin/',         admin.site.urls),
     path('api/health/',    health_check),
+    path('api/search/',    GlobalSearchView.as_view()),
     path('api/auth/',      include('users.urls')),
     path('api/',           include('projects.urls')),
     path('api/',           include('tasks.urls')),

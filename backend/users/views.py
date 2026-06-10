@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import RegisterSerializer, UserSerializer
+from .models import NotificationPreference
 
 User = get_user_model()
 
@@ -24,7 +25,7 @@ class RegisterView(generics.CreateAPIView):
         # After registering, immediately return JWT tokens so the user is logged in
         refresh = RefreshToken.for_user(user)
         return Response({
-            'user':    UserSerializer(user).data,
+            'user':    UserSerializer(user, context={'request': request}).data,
             'access':  str(refresh.access_token),
             'refresh': str(refresh),
         }, status=status.HTTP_201_CREATED)
@@ -39,7 +40,7 @@ class LoginView(TokenObtainPairView):
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
             user = User.objects.get(email=request.data['email'])
-            response.data['user'] = UserSerializer(user).data
+            response.data['user'] = UserSerializer(user, context={'request': request}).data
         return response
 
 
@@ -48,11 +49,11 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response(UserSerializer(request.user).data)
+        return Response(UserSerializer(request.user, context={'request': request}).data)
 
     def patch(self, request):
         # Allow the user to update their own name/avatar
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer = UserSerializer(request.user, data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
@@ -70,3 +71,68 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(APIView):
+    """POST /api/auth/change-password/"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user             = request.user
+        current_password = request.data.get('current_password')
+        new_password     = request.data.get('new_password')
+
+        if not current_password or not new_password:
+            return Response(
+                {'error': 'Both fields required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not user.check_password(current_password):
+            return Response(
+                {'current_password': ['Incorrect password.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if len(new_password) < 8:
+            return Response(
+                {'new_password': ['Minimum 8 characters.']},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.set_password(new_password)
+        user.save()
+        return Response({'success': True})
+
+
+class NotificationPrefsView(APIView):
+    """GET/PATCH /api/auth/notification-prefs/"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        return Response({
+            'task_assigned':  prefs.task_assigned,
+            'task_updated':   prefs.task_updated,
+            'project_invite': prefs.project_invite,
+            'reminders':      prefs.reminders,
+        })
+
+    def patch(self, request):
+        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+        for field in ['task_assigned', 'task_updated', 'project_invite', 'reminders']:
+            if field in request.data:
+                setattr(prefs, field, bool(request.data[field]))
+        prefs.save()
+        return Response({'success': True})
+
+
+class DeleteAccountView(APIView):
+    """DELETE /api/auth/delete-account/ — requires password confirmation"""
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        password = request.data.get('password')
+        if not password:
+            return Response({'error': 'Password required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.user.check_password(password):
+            return Response({'error': 'Incorrect password.'}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

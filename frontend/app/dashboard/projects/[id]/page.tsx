@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, Suspense } from 'react'
+import { useState, useRef, Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
@@ -7,6 +7,7 @@ import { useProject } from '@/lib/hooks/use-projects'
 import type { Task } from '@/lib/hooks/use-tasks'
 import { useTasks, useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks'
 import { usePermissions, useMembers } from '@/lib/hooks/use-members'
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
 import { ProjectTopbar } from '@/components/projects/ProjectTopbar'
 import { TaskRow } from '@/components/tasks/TaskRow'
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
@@ -58,9 +59,28 @@ function ProjectPageContent() {
   const createTask = useCreateTask(projectId)
   const updateTask = useUpdateTask(projectId)
 
+  const router                        = useRouter()
   const [newTitle, setNewTitle]       = useState('')
   const [selectedTask, setSelected]   = useState<Task | null>(null)
   const inputRef                      = useRef<HTMLInputElement>(null)
+
+  // Open task panel if ?task=<id> is in the URL (set by CommandPalette)
+  useEffect(() => {
+    const taskId = searchParams.get('task')
+    if (taskId && tasks) {
+      const found = tasks.find((t: Task) => t.id === Number(taskId))
+      if (found) setSelected(found)
+    }
+  }, [searchParams, tasks])
+
+  // Project-level keyboard shortcuts
+  useKeyboardShortcuts({
+    'n':      () => { if (canEdit) inputRef.current?.focus() },
+    '1':      () => router.push(`/dashboard/projects/${projectId}?view=list`),
+    '2':      () => router.push(`/dashboard/projects/${projectId}?view=kanban`),
+    '3':      () => router.push(`/dashboard/projects/${projectId}?view=calendar`),
+    'escape': () => setSelected(null),
+  })
 
   const handleAddTask = async () => {
     if (!newTitle.trim()) return

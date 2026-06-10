@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -35,3 +36,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+
+
+class NotificationPreference(models.Model):
+    """One row per user — stores which email notifications they want to receive."""
+    user              = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name='notification_prefs'
+    )
+    task_assigned     = models.BooleanField(default=True)
+    task_updated      = models.BooleanField(default=True)
+    project_invite    = models.BooleanField(default=True)
+    reminders         = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Prefs for {self.user.email}"
