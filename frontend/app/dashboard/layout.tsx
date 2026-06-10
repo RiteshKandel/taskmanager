@@ -48,11 +48,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             T
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <p className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               Task Manager
-            </p>
-            <p className="text-xs truncate max-w-[140px]" style={{ color: 'var(--text-secondary)' }}>
-              {user?.email}
             </p>
           </div>
         </div>
