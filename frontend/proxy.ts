@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server'
 // Pages that don't need login
 const PUBLIC_PATHS = ['/login', '/register']
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value
     || request.headers.get('authorization')?.replace('Bearer ', '')
 
