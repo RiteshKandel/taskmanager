@@ -38,6 +38,12 @@ class UserSerializer(serializers.ModelSerializer):
             return None
         request = self.context.get('request')
         if request:
-            return request.build_absolute_uri(obj.avatar.url)
-        return obj.avatar.url
+            url = request.build_absolute_uri(obj.avatar.url)
+        else:
+            url = obj.avatar.url
+        # Always serve over HTTPS — Railway sits behind an HTTPS reverse proxy
+        # but Django may still see the internal http:// connection
+        if url.startswith('http://'):
+            url = 'https://' + url[7:]
+        return url
  

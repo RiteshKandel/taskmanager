@@ -10,6 +10,13 @@ SECRET_KEY = os.environ['SECRET_KEY']   # must be set in Railway env vars
 # Railway gives you a domain like your-app.up.railway.app
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
+# Tell Django that Railway's reverse proxy forwards HTTPS as X-Forwarded-Proto
+# This ensures request.build_absolute_uri() returns https:// URLs
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT     = False   # Railway proxy handles TLS — don't double-redirect
+USE_X_FORWARDED_HOST    = True    # trust the X-Forwarded-Host header from Railway
+
+
 # ── Database — Railway provides DATABASE_URL automatically ────
 DATABASES = {
     'default': dj_database_url.config(

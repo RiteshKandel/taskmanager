@@ -107,21 +107,33 @@ class NotificationPrefsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
-        return Response({
-            'task_assigned':  prefs.task_assigned,
-            'task_updated':   prefs.task_updated,
-            'project_invite': prefs.project_invite,
-            'reminders':      prefs.reminders,
-        })
+        try:
+            prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+            return Response({
+                'task_assigned':  prefs.task_assigned,
+                'task_updated':   prefs.task_updated,
+                'project_invite': prefs.project_invite,
+                'reminders':      prefs.reminders,
+            })
+        except Exception:
+            # Graceful fallback if migration hasn't run yet
+            return Response({
+                'task_assigned':  True,
+                'task_updated':   True,
+                'project_invite': True,
+                'reminders':      True,
+            })
 
     def patch(self, request):
-        prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
-        for field in ['task_assigned', 'task_updated', 'project_invite', 'reminders']:
-            if field in request.data:
-                setattr(prefs, field, bool(request.data[field]))
-        prefs.save()
-        return Response({'success': True})
+        try:
+            prefs, _ = NotificationPreference.objects.get_or_create(user=request.user)
+            for field in ['task_assigned', 'task_updated', 'project_invite', 'reminders']:
+                if field in request.data:
+                    setattr(prefs, field, bool(request.data[field]))
+            prefs.save()
+            return Response({'success': True})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
 
 
 class DeleteAccountView(APIView):
