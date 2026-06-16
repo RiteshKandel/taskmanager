@@ -93,6 +93,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <SidebarLink href="/dashboard" active={pathname === '/dashboard'}>
             <span className="text-sm">⬡</span> Overview
           </SidebarLink>
+          <SidebarLink href="/dashboard/hub" active={pathname === '/dashboard/hub'}>
+            <span className="text-sm">💬</span> Team Hub
+          </SidebarLink>
         </div>
 
         {/* Projects tree */}
