@@ -75,6 +75,15 @@ export default function SettingsPage() {
     onError: () => notify.error('Failed to upload avatar'),
   })
 
+  const removeAvatar = useMutation({
+    mutationFn: () => api.patch('/auth/me/', { avatar: null }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['me'] })
+      notify.profileSaved()
+    },
+    onError: () => notify.error('Failed to remove avatar'),
+  })
+
   return (
     <div className="h-full overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
       <div className="max-w-[600px] mx-auto px-6 py-10">
@@ -117,18 +126,34 @@ export default function SettingsPage() {
               <p className="text-xs mb-3 truncate" style={{ color: 'var(--text-muted)' }}>
                 {user?.email}
               </p>
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploadAvatar.isPending}
-                className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
-                style={{
-                  background: 'var(--bg-active)',
-                  color:      'var(--text-secondary)',
-                  border:     '1px solid var(--border-strong)',
-                }}
-              >
-                {uploadAvatar.isPending ? '⟳ Uploading…' : '📷 Change photo'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  disabled={uploadAvatar.isPending}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                  style={{
+                    background: 'var(--bg-active)',
+                    color:      'var(--text-secondary)',
+                    border:     '1px solid var(--border-strong)',
+                  }}
+                >
+                  {uploadAvatar.isPending ? '⟳ Uploading…' : '📷 Change photo'}
+                </button>
+                {user?.avatar_url && (
+                  <button
+                    onClick={() => removeAvatar.mutate()}
+                    disabled={removeAvatar.isPending}
+                    className="text-xs font-medium px-3 py-1.5 rounded-lg transition-all disabled:opacity-50"
+                    style={{
+                      background: 'rgba(248,113,113,.1)',
+                      color:      '#f87171',
+                      border:     '1px solid rgba(248,113,113,.3)',
+                    }}
+                  >
+                    {removeAvatar.isPending ? '⟳ Removing…' : '🗑 Remove'}
+                  </button>
+                )}
+              </div>
               <input ref={fileRef} type="file" className="hidden" accept="image/*"
                 onChange={e => e.target.files?.[0] && uploadAvatar.mutate(e.target.files[0])} />
             </div>
