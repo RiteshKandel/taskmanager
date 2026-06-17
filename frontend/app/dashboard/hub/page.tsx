@@ -25,7 +25,7 @@ export default function HubPage() {
           </div>
           <div>
             <h1 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-              Team Forum
+              General Forum
             </h1>
             <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
               Share updates, tag @members, reference #projects
@@ -65,10 +65,10 @@ export default function HubPage() {
           </div>
           <div>
             <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              Who's Working on What
+              Contributor Map
             </h2>
             <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-              Auto-updated • refreshes every 30s
+              Project Contributors
             </p>
           </div>
         </div>

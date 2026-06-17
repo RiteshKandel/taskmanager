@@ -30,6 +30,17 @@ class Project(models.Model):
     created_at  = models.DateTimeField(auto_now_add=True)
     updated_at  = models.DateTimeField(auto_now=True)
 
+    class DefaultView(models.TextChoices):
+        LIST     = 'list',     'List'
+        KANBAN   = 'kanban',   'Kanban'
+        CALENDAR = 'calendar', 'Calendar'
+
+    default_view = models.CharField(
+        max_length=10,
+        choices=DefaultView.choices,
+        default=DefaultView.LIST,
+    )
+
     class Meta:
         ordering = ['position', 'created_at']
 
@@ -77,8 +88,9 @@ class ProjectMember(models.Model):
 
     project  = models.ForeignKey(Project, on_delete=models.CASCADE)
     user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    role     = models.CharField(max_length=10, choices=Role.choices, default=Role.VIEWER)
-    added_at = models.DateTimeField(auto_now_add=True)
+    role                 = models.CharField(max_length=10, choices=Role.choices, default=Role.VIEWER)
+    added_at             = models.DateTimeField(auto_now_add=True)
+    notifications_muted  = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ['project', 'user']

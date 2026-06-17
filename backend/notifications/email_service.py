@@ -113,6 +113,15 @@ def send_task_notification(user, task, action: str):
     if hasattr(task.project, 'owner') and task.project.owner != user:
         recipients.append(task.project.owner)
 
+    # Filter out anyone who muted this project
+    from projects.models import ProjectMember as _PM  # local import avoids circular import
+    muted_ids = set(
+        _PM.objects
+        .filter(project=task.project, notifications_muted=True)
+        .values_list('user_id', flat=True)
+    )
+    recipients = [r for r in recipients if r.id not in muted_ids]
+
     sent_ids = set()
     for recipient in recipients:
         if recipient.id not in sent_ids:

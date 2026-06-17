@@ -131,6 +131,70 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ]
         return Response(data)
 
+    @action(detail=True, methods=['get', 'patch'], url_path='my-settings',
+            permission_classes=[IsAuthenticated])
+    def my_settings(self, request, pk=None):
+        """
+        GET/PATCH /api/projects/{id}/my-settings/
+        Self-service: every member can read and update their OWN membership row.
+        """
+        project = self.get_object()
+        try:
+            membership = ProjectMember.objects.get(project=project, user=request.user)
+        except ProjectMember.DoesNotExist:
+            return Response({'error': 'Not a member of this project.'}, status=404)
+
+        if request.method == 'PATCH':
+            if 'notifications_muted' in request.data:
+                membership.notifications_muted = bool(request.data['notifications_muted'])
+                membership.save(update_fields=['notifications_muted'])
+
+        return Response({
+            'notifications_muted': membership.notifications_muted,
+            'role': membership.role,
+        })
+
+    @action(detail=True, methods=['post'], url_path='transfer-ownership',
+            permission_classes=[IsAuthenticated])
+    def transfer_ownership(self, request, pk=None):
+        """
+        POST /api/projects/{id}/transfer-ownership/  { "new_owner_id": 7 }
+        Only the current owner can call this.
+        """
+        project = self.get_object()
+
+        if project.owner_id != request.user.id:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Only the current owner can transfer ownership.')
+
+        new_owner_id = request.data.get('new_owner_id')
+        try:
+            new_membership = ProjectMember.objects.get(project=project, user_id=new_owner_id)
+        except ProjectMember.DoesNotExist:
+            return Response(
+                {'error': 'That user is not a member of this project.'},
+                status=400
+            )
+
+        old_owner = project.owner
+
+        # Swap the actual owner field
+        project.owner = new_membership.user
+        project.save(update_fields=['owner'])
+
+        # New owner's membership row becomes role=OWNER
+        new_membership.role = ProjectMember.Role.OWNER
+        new_membership.save(update_fields=['role'])
+
+        # Old owner is demoted to admin — they keep access, just not ownership
+        ProjectMember.objects.filter(
+            project=project, user=old_owner
+        ).update(role=ProjectMember.Role.ADMIN)
+
+        return Response(
+            ProjectDetailSerializer(project, context={'request': request}).data
+        )
+
 
 class MemberViewSet(viewsets.ModelViewSet):
     """

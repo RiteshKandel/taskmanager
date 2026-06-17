@@ -1,7 +1,9 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
-import { MembersPanel } from '@/components/members/MembersPanel'
+import { MembersPanel }        from '@/components/members/MembersPanel'
+import { ProjectSettingsPanel } from '@/components/settings/ProjectSettingsPanel'
+import { ProjectForumPanel }    from '@/components/projects/ProjectForumPanel'
 
 const VIEWS = [
   { key: 'list',     icon: '≡',  label: 'List'     },
@@ -20,7 +22,9 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
   const router       = useRouter()
   const searchParams = useSearchParams()
   const view         = searchParams.get('view') || 'list'
-  const [showMembers, setShowMembers] = useState(false)
+  const [showMembers, setShowMembers]   = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [showForum, setShowForum]       = useState(false)
 
   return (
     <>
@@ -61,7 +65,7 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
           </span>
         )}
 
-        {/* Members button — 13px text */}
+        {/* Members button */}
         <button
           onClick={() => setShowMembers(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] transition-all text-sm"
@@ -83,26 +87,44 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
           <span>{memberCount}</span>
         </button>
 
+        {/* Settings button */}
+        <button
+          onClick={() => setShowSettings(true)}
+          title="Project settings"
+          className="flex items-center justify-center w-8 h-8 rounded-[10px] transition-all text-sm"
+          style={{
+            border: '1px solid var(--border)',
+            color: 'var(--text-secondary)',
+            background: 'var(--bg-elevated)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'var(--border-strong)'
+            e.currentTarget.style.color = 'var(--text-primary)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'var(--border)'
+            e.currentTarget.style.color = 'var(--text-secondary)'
+          }}
+        >
+          ⚙
+        </button>
+
         {/* Forum button */}
         <button
-          onClick={() => router.replace(`?view=forum`)}
+          onClick={() => setShowForum(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] transition-all text-sm font-medium"
           style={{
             border: '1px solid var(--border)',
-            background: view === 'forum' ? 'var(--accent)' : 'var(--bg-elevated)',
-            color: view === 'forum' ? 'white' : 'var(--text-secondary)',
+            color: 'var(--text-secondary)',
+            background: 'var(--bg-elevated)',
           }}
           onMouseEnter={e => {
-            if (view !== 'forum') {
-              e.currentTarget.style.borderColor = 'var(--border-strong)'
-              e.currentTarget.style.color = 'var(--text-primary)'
-            }
+            e.currentTarget.style.borderColor = 'var(--border-strong)'
+            e.currentTarget.style.color = 'var(--text-primary)'
           }}
           onMouseLeave={e => {
-            if (view !== 'forum') {
-              e.currentTarget.style.borderColor = 'var(--border)'
-              e.currentTarget.style.color = 'var(--text-secondary)'
-            }
+            e.currentTarget.style.borderColor = 'var(--border)'
+            e.currentTarget.style.color = 'var(--text-secondary)'
           }}
         >
           <span>💬</span>
@@ -135,6 +157,20 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
 
       {showMembers && (
         <MembersPanel projectId={projectId} onClose={() => setShowMembers(false)} />
+      )}
+      {showSettings && project && (
+        <ProjectSettingsPanel
+          project={project}
+          onClose={() => setShowSettings(false)}
+          onOpenMembers={() => { setShowSettings(false); setShowMembers(true) }}
+        />
+      )}
+      {showForum && (
+        <ProjectForumPanel
+          projectId={projectId}
+          projectTitle={project?.title}
+          onClose={() => setShowForum(false)}
+        />
       )}
     </>
   )

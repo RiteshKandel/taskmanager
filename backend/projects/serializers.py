@@ -99,7 +99,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
         model  = Project
         fields = ['id', 'title', 'description', 'color', 'icon',
                   'owner', 'members', 'subprojects', 'parent',
-                  'is_archived', 'position', 'my_role',
+                  'is_archived', 'default_view', 'position', 'my_role',
                   'created_at', 'updated_at']
         read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
 

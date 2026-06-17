@@ -28,6 +28,7 @@ export const notify = {
 
   // ── Errors ──
   error:        (msg?: string) => toast.error(msg || 'Something went wrong'),
+  success:      (msg: string) => toast.success(msg),
   networkError: () => toast.error('Connection error — check your internet'),
   permError:    () => toast.error("You don't have permission to do that"),
 

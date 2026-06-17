@@ -5,10 +5,13 @@ type ShortcutMap = Record<string, () => void>
 export function useKeyboardShortcuts(shortcuts: ShortcutMap) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (!e.key) return
+
       // Don't fire when user is typing in a form field
-      const tag = (e.target as HTMLElement).tagName.toLowerCase()
+      const target = e.target as HTMLElement
+      const tag = target.tagName?.toLowerCase() || ''
       const isEditing = ['input', 'textarea', 'select'].includes(tag)
-        || (e.target as HTMLElement).isContentEditable
+        || target.isContentEditable
 
       // Build the key combo string: "ctrl+k", "shift+n", "1", etc.
       // Use Ctrl on Windows (ctrlKey), Cmd on Mac (metaKey) — unified as "ctrl"
