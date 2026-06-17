@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Project, ProjectMember, Label, ProjectMessage
+from .models import Project, ProjectMember, Label
 from users.serializers import UserSerializer
 
 User = get_user_model()
@@ -127,17 +127,3 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
             if is_descendant(self.instance, value):
                 raise serializers.ValidationError('Cannot set a subproject as the parent.')
         return value
-
-
-class ProjectMessageSerializer(serializers.ModelSerializer):
-    author  = UserSerializer(read_only=True)
-    is_mine = serializers.SerializerMethodField()
-
-    class Meta:
-        model  = ProjectMessage
-        fields = ['id', 'body', 'author', 'is_mine', 'created_at']
-        read_only_fields = ['id', 'author', 'created_at']
-
-    def get_is_mine(self, obj):
-        request = self.context.get('request')
-        return request.user == obj.author if request else False

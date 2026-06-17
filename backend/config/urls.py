@@ -20,18 +20,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 from tasks.search_views import GlobalSearchView
-from projects.views import TeamOverviewView
 
 def health_check(request):
     return JsonResponse({'status': 'ok'})
 
 urlpatterns = [
-    path('admin/',              admin.site.urls),
-    path('api/health/',         health_check),
-    path('api/search/',         GlobalSearchView.as_view()),
-    path('api/team/overview/',  TeamOverviewView.as_view()),
-    path('api/auth/',           include('users.urls')),
-    path('api/',                include('projects.urls')),
-    path('api/',                include('tasks.urls')),
-    path('api/',                include('notifications.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('admin/',         admin.site.urls),
+    path('api/health/',    health_check),
+    path('api/search/',    GlobalSearchView.as_view()),
+    path('api/auth/',      include('users.urls')),
+    path('api/',           include('projects.urls')),
+    path('api/',           include('tasks.urls')),
+    path('api/',           include('notifications.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

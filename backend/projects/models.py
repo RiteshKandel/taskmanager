@@ -95,23 +95,3 @@ class Label(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class ProjectMessage(models.Model):
-    """
-    One message in a project's discussion channel.
-    Any project member (viewer and above) can read and post —
-    this is open team chat, not gated by edit permissions.
-    """
-    project    = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name='messages'
-    )
-    author     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    body       = models.TextField(max_length=2000)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ['created_at']   # oldest first — newest at the bottom, like chat
-
-    def __str__(self):
-        return f"{self.author.email} in {self.project.title}: {self.body[:30]}"

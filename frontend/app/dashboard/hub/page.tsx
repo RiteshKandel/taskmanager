@@ -1,49 +1,83 @@
 'use client'
-import { useState, useMemo } from 'react'
-import { useTeamOverview, groupProjectsFromMembers } from '@/lib/hooks/use-team'
-import { ChannelList }   from '@/components/hub/ChannelList'
-import { ChatFeed }      from '@/components/hub/ChatFeed'
-import { ActivityBoard } from '@/components/hub/ActivityBoard'
+import { ForumFeed } from '@/components/hub/ForumFeed'
+import { ForumComposer } from '@/components/hub/ForumComposer'
+import { MemberProjectMatrix } from '@/components/hub/MemberProjectMatrix'
 
-export default function TeamHubPage() {
-  const { data: members = [], isLoading } = useTeamOverview()
-  const [activeChannel, setActiveChannel] = useState<number | null>(null)
-
-  const channels = useMemo(() => groupProjectsFromMembers(members), [members])
-
-  // Auto-select the first channel once data loads
-  const effectiveChannel = useMemo(() => {
-    if (activeChannel) return activeChannel
-    return channels[0]?.id ?? null
-  }, [activeChannel, channels])
-
-  const activeProject = channels.find(c => c.id === effectiveChannel)
-
-  if (isLoading) {
-    return (
-      <div
-        className="h-full flex items-center justify-center gap-3"
-        style={{ background: 'var(--bg-base)', color: 'var(--text-muted)' }}
-      >
-        <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-          style={{ borderColor: 'var(--accent)', borderTopColor: 'transparent' }} />
-        <span className="text-sm">Loading team hub…</span>
-      </div>
-    )
-  }
-
+export default function HubPage() {
   return (
-    <div className="h-full flex overflow-hidden">
-      <ChannelList
-        members={members}
-        activeId={effectiveChannel}
-        onSelect={setActiveChannel}
-      />
-      <ChatFeed
-        projectId={effectiveChannel}
-        projectTitle={activeProject?.title}
-      />
-      <ActivityBoard members={members} />
+    <div className="flex h-full overflow-hidden">
+
+      {/* ──── Left Panel: Forum ──── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
+        <div
+          className="flex-shrink-0 px-6 py-4 flex items-center gap-3"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
+            style={{
+              background: 'rgba(124,106,240,.1)',
+              border: '1px solid rgba(124,106,240,.2)',
+            }}
+          >
+            💬
+          </div>
+          <div>
+            <h1 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              Team Forum
+            </h1>
+            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              Share updates, tag @members, reference #projects
+            </p>
+          </div>
+        </div>
+
+        {/* Feed area — scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <ForumFeed />
+        </div>
+
+        {/* Composer — pinned to bottom */}
+        <div className="flex-shrink-0 p-4" style={{ borderTop: '1px solid var(--border)' }}>
+          <ForumComposer />
+        </div>
+      </div>
+
+      {/* ──── Right Panel: Member-Project Matrix ──── */}
+      <div
+        className="w-[340px] flex-shrink-0 flex flex-col overflow-hidden"
+        style={{ borderLeft: '1px solid var(--border)' }}
+      >
+        {/* Header */}
+        <div
+          className="flex-shrink-0 px-5 py-4 flex items-center gap-3"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
+            style={{
+              background: 'rgba(52,211,153,.1)',
+              border: '1px solid rgba(52,211,153,.2)',
+            }}
+          >
+            👥
+          </div>
+          <div>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+              Who's Working on What
+            </h2>
+            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              Auto-updated • refreshes every 30s
+            </p>
+          </div>
+        </div>
+
+        {/* Matrix area — scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <MemberProjectMatrix />
+        </div>
+      </div>
     </div>
   )
 }
