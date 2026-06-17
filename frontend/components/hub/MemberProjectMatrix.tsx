@@ -10,8 +10,8 @@ const ROLE_BADGE: Record<string, { bg: string; color: string; label: string }> =
   viewer: { bg: 'rgba(148,163,184,.12)', color: '#94a3b8', label: 'Viewer' },
 }
 
-export function MemberProjectMatrix() {
-  const { data: users = [], isLoading } = useMemberMatrix()
+export function MemberProjectMatrix({ projectId }: { projectId?: number }) {
+  const { data: users = [], isLoading } = useMemberMatrix(projectId)
 
   if (isLoading) {
     return (

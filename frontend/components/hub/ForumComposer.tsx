@@ -12,7 +12,7 @@ type Suggestion = {
   color?: string
 }
 
-export function ForumComposer() {
+export function ForumComposer({ projectId }: { projectId?: number }) {
   const [content, setContent] = useState('')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -20,10 +20,10 @@ export function ForumComposer() {
   const [triggerStart, setTriggerStart] = useState<number | null>(null)
   const [triggerType, setTriggerType] = useState<'@' | '#' | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const createPost = useCreateForumPost()
+  const createPost = useCreateForumPost(projectId)
 
   // Data sources for autocomplete
-  const { data: matrixUsers = [] } = useMemberMatrix()
+  const { data: matrixUsers = [] } = useMemberMatrix(projectId)
   const { data: flatProjects = [] } = useQuery({
     queryKey: ['projects-flat-all'],
     queryFn: () => api.get('/projects/flat/').then(r => r.data),

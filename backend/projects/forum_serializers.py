@@ -14,7 +14,7 @@ class ForumPostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model  = ForumPost
-        fields = ['id', 'author', 'content', 'mention_ids', 'created_at']
+        fields = ['id', 'author', 'content', 'mention_ids', 'project', 'created_at']
         read_only_fields = ['id', 'author', 'created_at']
 
     def get_mention_ids(self, obj):
@@ -23,18 +23,23 @@ class ForumPostSerializer(serializers.ModelSerializer):
 
 class ForumPostCreateSerializer(serializers.ModelSerializer):
     """
-    Write serializer — accepts content text, auto-parses @Name mentions
-    into user IDs by matching against all registered user names.
+    Write serializer — accepts content text and optional project_id.
+    Auto-parses @Name mentions into user IDs.
     """
+    project_id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:
         model  = ForumPost
-        fields = ['content']
+        fields = ['content', 'project_id']
 
     def create(self, validated_data):
         request = self.context.get('request')
+        project_id = validated_data.pop('project_id', None)
+
         post = ForumPost.objects.create(
             author=request.user,
-            **validated_data
+            project_id=project_id,
+            content=validated_data['content'],
         )
 
         # Parse @mentions from the content text.
@@ -44,11 +49,18 @@ class ForumPostCreateSerializer(serializers.ModelSerializer):
         mentioned_names = mention_pattern.findall(content)
 
         if mentioned_names:
-            # Try to resolve each mentioned name to a user
+            # Limit mention resolution to project members if project-scoped
+            user_qs = User.objects.all()
+            if project_id:
+                from .models import ProjectMember
+                member_ids = ProjectMember.objects.filter(
+                    project_id=project_id
+                ).values_list('user_id', flat=True)
+                user_qs = user_qs.filter(id__in=member_ids)
+
             for name in mentioned_names:
                 name = name.strip()
-                # Try exact name match first, then case-insensitive
-                user = User.objects.filter(name__iexact=name).first()
+                user = user_qs.filter(name__iexact=name).first()
                 if user and user != request.user:
                     post.mentions.add(user)
 

@@ -16,6 +16,9 @@ import { TaskListSkeleton, KanbanSkeleton, TopbarSkeleton } from '@/components/t
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { ForumFeed } from '@/components/hub/ForumFeed'
+import { ForumComposer } from '@/components/hub/ForumComposer'
+import { MemberProjectMatrix } from '@/components/hub/MemberProjectMatrix'
 
 // Load CalendarView only in the browser — avoids "window is not defined" errors
 const CalendarView = dynamic(
@@ -48,7 +51,7 @@ function ProjectPageContent() {
   const { id }    = useParams()
   const projectId = Number(id)
   const searchParams = useSearchParams()
-  const view = (searchParams.get('view') || 'list') as 'list' | 'kanban' | 'calendar'
+  const view = (searchParams.get('view') || 'list') as 'list' | 'kanban' | 'calendar' | 'forum'
   const qc = useQueryClient()
 
   const { data: project }                          = useProject(projectId)
@@ -79,6 +82,7 @@ function ProjectPageContent() {
     '1':      () => router.push(`/dashboard/projects/${projectId}?view=list`),
     '2':      () => router.push(`/dashboard/projects/${projectId}?view=kanban`),
     '3':      () => router.push(`/dashboard/projects/${projectId}?view=calendar`),
+    '4':      () => router.push(`/dashboard/projects/${projectId}?view=forum`),
     'escape': () => setSelected(null),
   })
 
@@ -146,6 +150,35 @@ function ProjectPageContent() {
               projectId={projectId}
               canEdit={canEdit}
             />
+          )}
+          {view === 'forum' && (
+            <div className="flex h-full overflow-hidden">
+              {/* Forum feed + composer */}
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto">
+                  <ForumFeed projectId={projectId} />
+                </div>
+                <div className="flex-shrink-0 p-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  <ForumComposer projectId={projectId} />
+                </div>
+              </div>
+              {/* Project matrix */}
+              <div
+                className="w-[300px] flex-shrink-0 flex flex-col overflow-hidden"
+                style={{ borderLeft: '1px solid var(--border)' }}
+              >
+                <div
+                  className="flex-shrink-0 px-4 py-3 flex items-center gap-2"
+                  style={{ borderBottom: '1px solid var(--border)' }}
+                >
+                  <span className="text-sm">👥</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Team</span>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <MemberProjectMatrix projectId={projectId} />
+                </div>
+              </div>
+            </div>
           )}
         </ErrorBoundary>
       </div>

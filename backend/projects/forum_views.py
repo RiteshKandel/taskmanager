@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 
 from .forum_models import ForumPost
 from .forum_serializers import ForumPostSerializer, ForumPostCreateSerializer
-from .models import ProjectMember
+from .models import Project, ProjectMember
 
 User = get_user_model()
 
@@ -21,16 +21,40 @@ class ForumPagination(PageNumberPagination):
 
 class ForumPostViewSet(viewsets.ModelViewSet):
     """
-    GET  /api/forum/          — paginated list, newest first
-    POST /api/forum/          — create a post (auto-parses @mentions)
-    DELETE /api/forum/{id}/   — delete own post only
+    Global or project-scoped forum.
+
+    GET  /api/forum/                — global forum posts
+    GET  /api/forum/?project=5      — project 5's forum (members only)
+    POST /api/forum/                — create post (include project_id for project forum)
+    DELETE /api/forum/{id}/         — delete own post only
     """
     permission_classes = [IsAuthenticated]
     pagination_class   = ForumPagination
     http_method_names  = ['get', 'post', 'delete']
 
+    def _get_project_id(self):
+        """Extract project filter from query params."""
+        pid = self.request.query_params.get('project')
+        return int(pid) if pid else None
+
+    def _check_project_membership(self, project_id):
+        """Returns True if user is a member of the given project."""
+        return ProjectMember.objects.filter(
+            project_id=project_id, user=self.request.user
+        ).exists()
+
     def get_queryset(self):
-        return ForumPost.objects.select_related('author').prefetch_related('mentions').all()
+        qs = ForumPost.objects.select_related('author').prefetch_related('mentions')
+        project_id = self._get_project_id()
+
+        if project_id:
+            # Project-scoped: only show if user is a member
+            if not self._check_project_membership(project_id):
+                return ForumPost.objects.none()
+            return qs.filter(project_id=project_id)
+        else:
+            # Global forum: only posts with project=NULL
+            return qs.filter(project__isnull=True)
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -45,8 +69,17 @@ class ForumPostViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        # If posting to a project forum, verify membership
+        project_id = request.data.get('project_id')
+        if project_id:
+            if not self._check_project_membership(int(project_id)):
+                return Response(
+                    {'error': 'You are not a member of this project.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
         post = serializer.save()
-        # Return the full read serializer for the response
         return Response(
             ForumPostSerializer(post, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
@@ -65,44 +98,48 @@ class ForumPostViewSet(viewsets.ModelViewSet):
 
 class MemberProjectMatrixView(APIView):
     """
-    GET /api/member-matrix/
-    Returns all users who share at least one project with the current user,
-    along with the projects they are assigned to (that the current user can see).
-
-    Response: [
-        {
-            "id": 1,
-            "name": "John Doe",
-            "email": "john@example.com",
-            "avatar_url": "...",
-            "projects": [
-                {"id": 5, "title": "Website Redesign", "color": "#4F46E5", "role": "editor"}
-            ]
-        },
-        ...
-    ]
+    GET /api/member-matrix/             — all shared members across all projects
+    GET /api/member-matrix/?project=5   — only members of project 5 + their shared projects
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
+        project_filter = request.query_params.get('project')
 
-        # Get all projects the current user is part of
-        my_project_ids = ProjectMember.objects.filter(
-            user=user
-        ).values_list('project_id', flat=True)
+        if project_filter:
+            project_id = int(project_filter)
+            # Check membership
+            if not ProjectMember.objects.filter(project_id=project_id, user=user).exists():
+                return Response([])
 
-        # Get all members of those projects (including current user)
-        memberships = ProjectMember.objects.filter(
-            project_id__in=my_project_ids
-        ).select_related('user', 'project').order_by('user__name')
+            # Get member IDs of this project
+            member_ids = ProjectMember.objects.filter(
+                project_id=project_id
+            ).values_list('user_id', flat=True)
+
+            # Get all memberships of these users (across projects they share)
+            memberships = ProjectMember.objects.filter(
+                user_id__in=member_ids,
+                project__in=ProjectMember.objects.filter(
+                    user_id__in=member_ids
+                ).values_list('project_id', flat=True)
+            ).select_related('user', 'project').order_by('user__name')
+        else:
+            # Global: all projects the current user is part of
+            my_project_ids = ProjectMember.objects.filter(
+                user=user
+            ).values_list('project_id', flat=True)
+
+            memberships = ProjectMember.objects.filter(
+                project_id__in=my_project_ids
+            ).select_related('user', 'project').order_by('user__name')
 
         # Group by user
         user_map = {}
         for m in memberships:
             uid = m.user_id
             if uid not in user_map:
-                # Build avatar_url the same way the UserSerializer does
                 avatar_url = None
                 if m.user.avatar:
                     avatar_url = request.build_absolute_uri(m.user.avatar.url)

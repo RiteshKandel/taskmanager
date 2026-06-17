@@ -63,7 +63,7 @@ function RichContent({ content, mentionIds }: { content: string; mentionIds: num
   )
 }
 
-export function ForumFeed() {
+export function ForumFeed({ projectId }: { projectId?: number }) {
   const { user } = useAuth()
   const router = useRouter()
   const {
@@ -72,8 +72,8 @@ export function ForumFeed() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useForumPosts()
-  const deletePost = useDeleteForumPost()
+  } = useForumPosts(projectId)
+  const deletePost = useDeleteForumPost(projectId)
 
   const allPosts: ForumPost[] = data?.pages?.flatMap((p: any) => p.results || []) || []
 

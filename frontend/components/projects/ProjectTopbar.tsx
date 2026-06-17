@@ -7,6 +7,7 @@ const VIEWS = [
   { key: 'list',     icon: '≡',  label: 'List'     },
   { key: 'kanban',   icon: '⊞',  label: 'Board'    },
   { key: 'calendar', icon: '📅', label: 'Calendar' },
+  { key: 'forum',    icon: '💬', label: 'Forum'    },
 ]
 
 interface Props {

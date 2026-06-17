@@ -14,6 +14,7 @@ export type ForumPost = {
   }
   content: string
   mention_ids: number[]
+  project: number | null
   created_at: string
 }
 
@@ -32,14 +33,19 @@ export type MatrixUser = {
 
 // ── Forum hooks ───────────────────────────────────────────────────────────────
 
-export function useForumPosts() {
+/**
+ * Fetch forum posts — global (no projectId) or project-scoped.
+ */
+export function useForumPosts(projectId?: number) {
   return useInfiniteQuery({
-    queryKey: ['forum-posts'],
-    queryFn: ({ pageParam = 1 }) =>
-      api.get('/forum/', { params: { page: pageParam } }).then(r => r.data),
+    queryKey: ['forum-posts', projectId ?? 'global'],
+    queryFn: ({ pageParam = 1 }) => {
+      const params: Record<string, any> = { page: pageParam }
+      if (projectId) params.project = projectId
+      return api.get('/forum/', { params }).then(r => r.data)
+    },
     getNextPageParam: (lastPage: any) => {
       if (!lastPage.next) return undefined
-      // Extract page number from the next URL
       const url = new URL(lastPage.next)
       return Number(url.searchParams.get('page'))
     },
@@ -47,25 +53,34 @@ export function useForumPosts() {
   })
 }
 
-export function useCreateForumPost() {
+/**
+ * Create a forum post — global or project-scoped.
+ */
+export function useCreateForumPost(projectId?: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (content: string) =>
-      api.post('/forum/', { content }).then(r => r.data),
+      api.post('/forum/', {
+        content,
+        ...(projectId ? { project_id: projectId } : {}),
+      }).then(r => r.data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['forum-posts'] })
+      qc.invalidateQueries({ queryKey: ['forum-posts', projectId ?? 'global'] })
     },
     onError: () => notify.error('Failed to post message'),
   })
 }
 
-export function useDeleteForumPost() {
+/**
+ * Delete a forum post.
+ */
+export function useDeleteForumPost(projectId?: number) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (postId: number) =>
       api.delete(`/forum/${postId}/`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['forum-posts'] })
+      qc.invalidateQueries({ queryKey: ['forum-posts', projectId ?? 'global'] })
     },
     onError: () => notify.error('Failed to delete post'),
   })
@@ -73,10 +88,17 @@ export function useDeleteForumPost() {
 
 // ── Member-Project Matrix hook ────────────────────────────────────────────────
 
-export function useMemberMatrix() {
+/**
+ * Fetch member-project matrix — global (no projectId) or project-scoped.
+ */
+export function useMemberMatrix(projectId?: number) {
   return useQuery({
-    queryKey: ['member-matrix'],
-    queryFn: () => api.get('/member-matrix/').then(r => r.data as MatrixUser[]),
-    refetchInterval: 30000, // auto-refresh every 30 seconds
+    queryKey: ['member-matrix', projectId ?? 'global'],
+    queryFn: () => {
+      const params: Record<string, any> = {}
+      if (projectId) params.project = projectId
+      return api.get('/member-matrix/', { params }).then(r => r.data as MatrixUser[])
+    },
+    refetchInterval: 30000,
   })
 }
