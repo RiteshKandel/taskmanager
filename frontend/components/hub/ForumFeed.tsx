@@ -22,8 +22,10 @@ function timeAgo(dateStr: string): string {
  * Renders content with @mentions highlighted as chips and #project as badges.
  */
 function RichContent({ content, mentionIds }: { content: string; mentionIds: number[] }) {
-  // Split on @word or #word patterns
-  const parts = content.split(/(@[\w]+(?:\s[\w]+)?|#[\w]+(?:\s[\w]+)?)/g)
+  // Split on @mention (up to two words for "First Last") or #project (single word only).
+  // # is intentionally single-word: the autocomplete inserts "#Title " with a trailing space,
+  // so anything after that space is a new word — not part of the project reference.
+  const parts = content.split(/(@[\w]+(?:\s[\w]+)?|#[\w]+)/g)
   return (
     <span>
       {parts.map((part, i) => {
