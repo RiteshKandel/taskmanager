@@ -21,7 +21,7 @@ interface Props {
 export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Props) {
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const view         = searchParams.get('view') || 'list'
+  const view         = searchParams.get('view') || project?.default_view || 'list'
   const [showMembers, setShowMembers]   = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [showForum, setShowForum]       = useState(false)
