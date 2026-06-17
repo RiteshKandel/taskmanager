@@ -25,8 +25,11 @@ export function ForumComposer({ projectId }: { projectId?: number }) {
   // Data sources for autocomplete
   const { data: matrixUsers = [] } = useMemberMatrix(projectId)
   const { data: flatProjects = [] } = useQuery({
-    queryKey: ['projects-flat-all'],
-    queryFn: () => api.get('/projects/flat/').then(r => r.data),
+    queryKey: ['projects-flat-all', projectId ?? 'global'],
+    queryFn: () => {
+      const params = projectId ? { root_id: projectId } : {}
+      return api.get('/projects/flat/', { params }).then(r => r.data)
+    },
   })
 
   const handleInput = useCallback((value: string) => {

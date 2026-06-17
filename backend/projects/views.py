@@ -95,8 +95,27 @@ class ProjectViewSet(viewsets.ModelViewSet):
         ).distinct().select_related('parent', 'parent__parent')
 
         search = request.query_params.get('search', '')
+        root_id = request.query_params.get('root_id')
+
+        all_projects = list(qs)
+        
+        if root_id:
+            try:
+                root_id = int(root_id)
+                descendant_ids = {root_id}
+                queue = [root_id]
+                while queue:
+                    current = queue.pop(0)
+                    children = [p.pk for p in all_projects if p.parent_id == current]
+                    descendant_ids.update(children)
+                    queue.extend(children)
+                
+                all_projects = [p for p in all_projects if p.pk in descendant_ids]
+            except ValueError:
+                pass
+
         if search:
-            qs = qs.filter(title__icontains=search)
+            all_projects = [p for p in all_projects if search.lower() in p.title.lower()]
 
         def build_path(project):
             parts = [project.title]
@@ -108,7 +127,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
         data = [
             {'id': p.pk, 'title': p.title, 'path': build_path(p), 'color': p.color}
-            for p in qs
+            for p in all_projects
         ]
         return Response(data)
 
