@@ -7,7 +7,6 @@ const VIEWS = [
   { key: 'list',     icon: '≡',  label: 'List'     },
   { key: 'kanban',   icon: '⊞',  label: 'Board'    },
   { key: 'calendar', icon: '📅', label: 'Calendar' },
-  { key: 'forum',    icon: '💬', label: 'Forum'    },
 ]
 
 interface Props {
@@ -82,6 +81,32 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
         >
           <span>👥</span>
           <span>{memberCount}</span>
+        </button>
+
+        {/* Forum button */}
+        <button
+          onClick={() => router.replace(`?view=forum`)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] transition-all text-sm font-medium"
+          style={{
+            border: '1px solid var(--border)',
+            background: view === 'forum' ? 'var(--accent)' : 'var(--bg-elevated)',
+            color: view === 'forum' ? 'white' : 'var(--text-secondary)',
+          }}
+          onMouseEnter={e => {
+            if (view !== 'forum') {
+              e.currentTarget.style.borderColor = 'var(--border-strong)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }
+          }}
+          onMouseLeave={e => {
+            if (view !== 'forum') {
+              e.currentTarget.style.borderColor = 'var(--border)'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }
+          }}
+        >
+          <span>💬</span>
+          <span>Forum</span>
         </button>
 
         {/* View toggle — 13px text */}
