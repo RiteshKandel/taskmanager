@@ -17,6 +17,14 @@ export function useTasks(projectId: number) {
   })
 }
 
+export function useAllTasks() {
+  return useQuery({
+    queryKey: ['tasks', 'all'],
+    // Using is_done=False and ordering by due date/priority to show urgent tasks
+    queryFn: () => api.get('/tasks/?is_done=False&ordering=due_date,-priority').then(r => r.data.results !== undefined ? r.data.results : r.data),
+  })
+}
+
 export function useTask(id: number) {
   return useQuery({
     queryKey: ['tasks', 'detail', id],

@@ -30,7 +30,7 @@ class TaskListSerializer(serializers.ModelSerializer):
         model  = Task
         fields = ['id', 'title', 'is_done', 'status', 'priority',
                   'due_date', 'start_date', 'position', 'assignees', 'labels',
-                  'subtask_count', 'parent']
+                  'subtask_count', 'parent', 'project']
 
     def get_subtask_count(self, obj):
         return obj.subtasks.count()
