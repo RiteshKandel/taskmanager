@@ -5,7 +5,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
-from .serializers import RegisterSerializer, UserSerializer
+from rest_framework import serializers
+from .serializers import RegisterSerializer, UserSerializer, validate_password_strength
 from .models import NotificationPreference
 
 User = get_user_model()
@@ -92,9 +93,11 @@ class ChangePasswordView(APIView):
                 {'current_password': ['Incorrect password.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        if len(new_password) < 8:
+        try:
+            validate_password_strength(new_password)
+        except serializers.ValidationError as e:
             return Response(
-                {'new_password': ['Minimum 8 characters.']},
+                {'new_password': e.detail},
                 status=status.HTTP_400_BAD_REQUEST
             )
         user.set_password(new_password)

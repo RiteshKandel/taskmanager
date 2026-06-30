@@ -1,7 +1,21 @@
+import re
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 User = get_user_model()  # always use this instead of importing User directly
+
+def validate_password_strength(password):
+    if len(password) < 8:
+        raise serializers.ValidationError('Password must be at least 8 characters.')
+    if not re.search(r'[A-Z]', password):
+        raise serializers.ValidationError('Password must contain an uppercase letter.')
+    if not re.search(r'[a-z]', password):
+        raise serializers.ValidationError('Password must contain a lowercase letter.')
+    if not re.search(r'[0-9]', password):
+        raise serializers.ValidationError('Password must contain a number.')
+    if not re.search(r'[^A-Za-z0-9]', password):
+        raise serializers.ValidationError('Password must contain a special character.')
+    return password
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -17,6 +31,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # validate() is called automatically — raise here to reject the request
         if data['password'] != data['password2']:
             raise serializers.ValidationError('Passwords do not match')
+        validate_password_strength(data['password'])
         return data
 
     def create(self, validated_data):

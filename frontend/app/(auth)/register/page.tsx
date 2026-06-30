@@ -19,7 +19,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    const pw = form.password
     if (form.password !== form.password2) { setError('Passwords do not match'); return }
+    if (pw.length < 8) { setError('Password must be at least 8 characters'); return }
+    if (!/[A-Z]/.test(pw)) { setError('Password must contain an uppercase letter'); return }
+    if (!/[a-z]/.test(pw)) { setError('Password must contain a lowercase letter'); return }
+    if (!/[0-9]/.test(pw)) { setError('Password must contain a number'); return }
+    if (!/[^A-Za-z0-9]/.test(pw)) { setError('Password must contain a special character'); return }
+    
     setLoading(true)
     try {
       await register(form.email, form.name, form.password, form.password2)
