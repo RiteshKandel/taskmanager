@@ -5,11 +5,12 @@ const ITEMS = [
   { key: 'list',     icon: '≡',  label: 'List'  },
   { key: 'kanban',   icon: '⊞',  label: 'Board' },
   { key: 'calendar', icon: '📅', label: 'Cal'   },
+  { key: 'forum',    icon: '💬', label: 'Forum' },
 ]
 
-interface Props { onMore: () => void }
+interface Props { onForum: () => void }
 
-export function BottomNav({ onMore }: Props) {
+export function BottomNav({ onForum }: Props) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const view         = searchParams.get('view') || 'list'
@@ -21,38 +22,35 @@ export function BottomNav({ onMore }: Props) {
         height: '56px',
         background: 'var(--bg-surface)',
         borderTop: '1px solid var(--border)',
-        // Respect the iPhone home-indicator safe area
         paddingBottom: 'env(safe-area-inset-bottom)',
       }}
     >
-      {ITEMS.map(item => (
-        <button
-          key={item.key}
-          onClick={() => router.replace(`?view=${item.key}`)}
-          className="flex-1 flex flex-col items-center justify-center gap-0.5"
-        >
-          <span style={{ fontSize: '17px', opacity: view === item.key ? 1 : 0.5 }}>
-            {item.icon}
-          </span>
-          <span
-            className="text-[9px] font-medium"
-            style={{ color: view === item.key ? 'var(--accent)' : 'var(--text-muted)' }}
-          >
-            {item.label}
-          </span>
-        </button>
-      ))}
+      {ITEMS.map(item => {
+        const isView  = item.key !== 'forum'
+        const isActive = isView ? view === item.key : false
 
-      {/* "More" opens a sheet with Members + Settings */}
-      <button
-        onClick={onMore}
-        className="flex-1 flex flex-col items-center justify-center gap-0.5"
-      >
-        <span style={{ fontSize: '17px', color: 'var(--text-muted)' }}>⚙</span>
-        <span className="text-[9px] font-medium" style={{ color: 'var(--text-muted)' }}>
-          More
-        </span>
-      </button>
+        return (
+          <button
+            key={item.key}
+            onClick={() =>
+              isView
+                ? router.replace(`?view=${item.key}`)
+                : onForum()
+            }
+            className="flex-1 flex flex-col items-center justify-center gap-0.5"
+          >
+            <span style={{ fontSize: '17px', opacity: isActive || (!isView) ? 1 : 0.45 }}>
+              {item.icon}
+            </span>
+            <span
+              className="text-[9px] font-medium"
+              style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}
+            >
+              {item.label}
+            </span>
+          </button>
+        )
+      })}
     </div>
   )
 }

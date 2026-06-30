@@ -4,6 +4,7 @@ import {
   useMembers, useAddMember, useUpdateMemberRole,
   useRemoveMember, usePermissions,
 } from '@/lib/hooks/use-members'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import type { Member, Role } from '@/lib/hooks/use-members'
 
 const ROLES: Role[] = ['admin', 'editor', 'viewer']
@@ -14,6 +15,7 @@ export function MembersPanel({ projectId, onClose }: Props) {
   const { data: membersRaw = [], isLoading } = useMembers(projectId)
   const members = Array.isArray(membersRaw) ? membersRaw : []
   const { canManage }   = usePermissions(projectId)
+  const isMobile        = useIsMobile()
   const addMember       = useAddMember(projectId)
   const updateRole      = useUpdateMemberRole(projectId)
   const removeMember    = useRemoveMember(projectId)
@@ -47,9 +49,13 @@ export function MembersPanel({ projectId, onClose }: Props) {
         onClick={onClose}
       />
       <div
-        className="fixed right-0 top-0 h-full w-full flex flex-col z-50"
-        style={{
-          maxWidth: '380px',
+        className="fixed z-50 flex flex-col"
+        style={isMobile ? {
+          inset: 0,
+          background: 'var(--bg-surface)',
+          animation: 'slideUpFull .25s ease',
+        } : {
+          right: 0, top: 0, height: '100%', width: '100%', maxWidth: '380px',
           background: 'var(--bg-surface)',
           borderLeft: '1px solid var(--border)',
           animation: 'slideInRight .25s ease',

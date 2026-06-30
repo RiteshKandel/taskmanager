@@ -52,15 +52,15 @@ export default function Dashboard() {
 
   return (
     <div 
-      className="p-8 h-full overflow-y-auto relative"
+      className="p-4 md:p-8 h-full overflow-y-auto relative"
       style={{
         background: 'radial-gradient(circle at top right, rgba(124, 106, 240, 0.05), transparent 40%)'
       }}
     >
       {/* Welcome Section */}
-      <div className="mb-10 relative z-10">
+      <div className="mb-6 md:mb-10 relative z-10">
         <h1 
-          className="text-4xl font-extrabold mb-2 tracking-tight"
+          className="text-2xl md:text-4xl font-extrabold mb-2 tracking-tight"
           style={{ 
             background: 'linear-gradient(135deg, var(--text-primary) 30%, var(--accent))',
             WebkitBackgroundClip: 'text',
@@ -69,19 +69,19 @@ export default function Dashboard() {
         >
           Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}!
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }} className="text-sm">
+        <p style={{ color: 'var(--text-secondary)' }} className="text-xs md:text-sm">
           Here's an overview of what's happening across your projects today.
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
-        <StatCard title="Active Projects" value={stats.totalProjects} icon="📁" />
-        <StatCard title="Tasks To Do" value={stats.activeTasks} icon="✓" />
-        <StatCard title="High Priority" value={stats.highPriority} icon="🔥" color="#f87171" />
+      <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-10 relative z-10">
+        <StatCard title="Projects" value={stats.totalProjects} icon="📁" />
+        <StatCard title="To Do" value={stats.activeTasks} icon="✓" />
+        <StatCard title="🔥 High" value={stats.highPriority} icon="" color="#f87171" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 relative z-10">
         {/* Urgent Tasks */}
         <div 
           className="rounded-[24px] p-6 shadow-sm border"
@@ -195,7 +195,7 @@ export default function Dashboard() {
 function StatCard({ title, value, icon, color = 'var(--accent)' }: { title: string, value: number, icon: string, color?: string }) {
   return (
     <div 
-      className="rounded-[24px] p-6 border transition-all hover:-translate-y-1 hover:shadow-lg"
+      className="rounded-2xl md:rounded-[24px] p-4 md:p-6 border transition-all hover:-translate-y-1 hover:shadow-lg"
       style={{
         background: 'var(--bg-surface)',
         backdropFilter: 'blur(12px)',
@@ -204,19 +204,21 @@ function StatCard({ title, value, icon, color = 'var(--accent)' }: { title: stri
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>{title}</p>
-          <p className="text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>{value}</p>
+          <p className="text-[10px] md:text-sm font-medium mb-1 md:mb-2" style={{ color: 'var(--text-secondary)' }}>{title}</p>
+          <p className="text-2xl md:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text-primary)' }}>{value}</p>
         </div>
-        <div 
-          className="w-12 h-12 rounded-[16px] flex items-center justify-center text-xl shadow-inner"
-          style={{ 
-            background: `color-mix(in srgb, ${color} 15%, transparent)`,
-            color: color,
-            border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`
-          }}
-        >
-          {icon}
-        </div>
+        {icon && (
+          <div 
+            className="w-8 h-8 md:w-12 md:h-12 rounded-xl md:rounded-[16px] flex items-center justify-center text-base md:text-xl shadow-inner flex-shrink-0"
+            style={{ 
+              background: `color-mix(in srgb, ${color} 15%, transparent)`,
+              color: color,
+              border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`
+            }}
+          >
+            {icon}
+          </div>
+        )}
       </div>
     </div>
   )

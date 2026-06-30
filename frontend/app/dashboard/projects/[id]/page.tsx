@@ -14,6 +14,7 @@ import { TaskRow } from '@/components/tasks/TaskRow'
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { ProjectForumPanel } from '@/components/projects/ProjectForumPanel'
 import { TaskListSkeleton, KanbanSkeleton, TopbarSkeleton } from '@/components/tasks/TaskListSkeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -66,7 +67,7 @@ function ProjectPageContent() {
   const qc                            = useQueryClient()
   const [newTitle, setNewTitle]       = useState('')
   const [selectedTask, setSelected]   = useState<Task | null>(null)
-  const [showMoreSheet, setShowMoreSheet] = useState(false)
+  const [showForum, setShowForum]     = useState(false)
   const inputRef                      = useRef<HTMLInputElement>(null)
 
   // Open task panel if ?task=<id> is in the URL (set by CommandPalette)
@@ -158,13 +159,17 @@ function ProjectPageContent() {
       {/* Bottom nav — mobile only, replaces topbar view toggle */}
       {isMobile && (
         <Suspense fallback={null}>
-          <BottomNav onMore={() => setShowMoreSheet(true)} />
-          {showMoreSheet && (
-            <MoreSheet
-              onClose={() => setShowMoreSheet(false)}
-            />
-          )}
+          <BottomNav onForum={() => setShowForum(true)} />
         </Suspense>
+      )}
+
+      {/* Project forum panel — mobile triggered by BottomNav, desktop by topbar */}
+      {showForum && (
+        <ProjectForumPanel
+          projectId={projectId}
+          projectTitle={project?.title}
+          onClose={() => setShowForum(false)}
+        />
       )}
 
       {selectedTask && (

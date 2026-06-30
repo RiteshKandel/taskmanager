@@ -112,29 +112,28 @@ export function ProjectTopbar({ project, role, memberCount = 0, projectId }: Pro
           ⚙
         </button>
 
-        {/* Forum button — hidden on mobile (fits in More sheet via BottomNav) */}
-        {!isMobile && (
-          <button
-            onClick={() => setShowForum(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] transition-all text-sm font-medium"
-            style={{
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-              background: 'var(--bg-elevated)',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.borderColor = 'var(--border-strong)'
-              e.currentTarget.style.color = 'var(--text-primary)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.borderColor = 'var(--border)'
-              e.currentTarget.style.color = 'var(--text-secondary)'
-            }}
-          >
-            <span>💬</span>
-            <span>Forum</span>
-          </button>
-        )}
+        {/* Forum button — icon-only on mobile */}
+        <button
+          onClick={() => setShowForum(true)}
+          className="flex items-center gap-1.5 rounded-[10px] transition-all text-sm flex-shrink-0"
+          style={{
+            padding: isMobile ? '6px 8px' : '6px 12px',
+            border: '1px solid var(--border)',
+            color: 'var(--text-secondary)',
+            background: 'var(--bg-elevated)',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'var(--border-strong)'
+            e.currentTarget.style.color = 'var(--text-primary)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'var(--border)'
+            e.currentTarget.style.color = 'var(--text-secondary)'
+          }}
+        >
+          <span>💬</span>
+          {!isMobile && <span>Forum</span>}
+        </button>
 
         {/* View toggle — desktop only; mobile uses BottomNav */}
         {!isMobile && (
