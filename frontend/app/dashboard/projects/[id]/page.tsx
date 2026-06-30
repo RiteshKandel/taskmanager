@@ -8,10 +8,12 @@ import type { Task } from '@/lib/hooks/use-tasks'
 import { useTasks, useCreateTask, useUpdateTask } from '@/lib/hooks/use-tasks'
 import { usePermissions, useMembers } from '@/lib/hooks/use-members'
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import { ProjectTopbar } from '@/components/projects/ProjectTopbar'
 import { TaskRow } from '@/components/tasks/TaskRow'
 import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 import { KanbanBoard } from '@/components/kanban/KanbanBoard'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { TaskListSkeleton, KanbanSkeleton, TopbarSkeleton } from '@/components/tasks/TaskListSkeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
@@ -55,6 +57,7 @@ function ProjectPageContent() {
   const memberCount = Array.isArray(members) ? members.length : 0
   const createTask = useCreateTask(projectId)
   const updateTask = useUpdateTask(projectId)
+  const isMobile   = useIsMobile()
 
   // Fall back to the project's saved default_view, then 'list'
   const view = (searchParams.get('view') || project?.default_view || 'list') as 'list' | 'kanban' | 'calendar' | 'forum'
@@ -63,6 +66,7 @@ function ProjectPageContent() {
   const qc                            = useQueryClient()
   const [newTitle, setNewTitle]       = useState('')
   const [selectedTask, setSelected]   = useState<Task | null>(null)
+  const [showMoreSheet, setShowMoreSheet] = useState(false)
   const inputRef                      = useRef<HTMLInputElement>(null)
 
   // Open task panel if ?task=<id> is in the URL (set by CommandPalette)
@@ -151,6 +155,18 @@ function ProjectPageContent() {
         </ErrorBoundary>
       </div>
 
+      {/* Bottom nav — mobile only, replaces topbar view toggle */}
+      {isMobile && (
+        <Suspense fallback={null}>
+          <BottomNav onMore={() => setShowMoreSheet(true)} />
+          {showMoreSheet && (
+            <MoreSheet
+              onClose={() => setShowMoreSheet(false)}
+            />
+          )}
+        </Suspense>
+      )}
+
       {selectedTask && (
         <TaskDetailPanel
           task={selectedTask}
@@ -159,6 +175,32 @@ function ProjectPageContent() {
         />
       )}
     </div>
+  )
+}
+
+/* ──── MoreSheet — mobile bottom sheet for overflow actions ──── */
+function MoreSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40"
+        style={{ background: 'rgba(0,0,0,.5)' }}
+        onClick={onClose}
+      />
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl p-3 pb-8"
+        style={{ background: 'var(--bg-elevated)', borderTop: '1px solid var(--border-strong)' }}
+      >
+        <div className="w-9 h-1 rounded-full mx-auto mb-3" style={{ background: 'var(--bg-active)' }} />
+        <button
+          onClick={onClose}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          ✕ Close
+        </button>
+      </div>
+    </>
   )
 }
 
@@ -191,7 +233,7 @@ function ListContent({
   const doneTasks = tasks?.filter((t: Task) =>  t.is_done && !t.parent) ?? []
 
   return (
-    <div className="max-w-4xl mx-auto px-8 py-8 h-full overflow-y-auto">
+    <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-8 h-full overflow-y-auto">
       {/* Add task bar */}
       {canEdit && (
         <div

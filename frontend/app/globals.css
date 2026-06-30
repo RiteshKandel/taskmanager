@@ -232,6 +232,11 @@ h3 { font-size: var(--text-base); font-weight: 600; line-height: var(--leading-t
   to   { opacity: 1; transform: scale(1); }
 }
 
+@keyframes slideUpFull {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ── Tiptap editor dark theme ─────────────────────────── */
 .tiptap {
   outline: none;

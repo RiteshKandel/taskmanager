@@ -30,20 +30,26 @@ export function TaskRow({ task, onToggle, onOpen }: TaskRowProps) {
       }}
       onClick={onOpen}
     >
-      {/* Checkbox — 18px for better click target */}
+      {/* Checkbox — larger hit area on touch (28px invisible zone, 16px visual) */}
       <button
         onClick={e => { e.stopPropagation(); onToggle() }}
-        className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center transition-all"
+        className="flex items-center justify-center flex-shrink-0 -ml-1"
+        style={{ width: '28px', height: '28px' }}
         aria-label={task.is_done ? 'Mark as not done' : 'Mark as done'}
-        style={{
-          border: task.is_done ? 'none' : '1.5px solid var(--text-muted)',
-          background: task.is_done ? 'var(--color-green)' : 'transparent',
-        }}
       >
-        {task.is_done && (
-          /* 10px is fine here — decorative checkmark inside a small control */
-          <span style={{ fontSize: '10px', fontWeight: 700, color: '#0e0f14', lineHeight: 1 }}>✓</span>
-        )}
+        <span
+          className="flex items-center justify-center rounded"
+          style={{
+            width: '16px', height: '16px',
+            border: task.is_done ? 'none' : '1.5px solid var(--text-muted)',
+            background: task.is_done ? 'var(--color-green)' : 'transparent',
+            flexShrink: 0,
+          }}
+        >
+          {task.is_done && (
+            <span style={{ fontSize: '10px', fontWeight: 700, color: '#0e0f14', lineHeight: 1 }}>✓</span>
+          )}
+        </span>
       </button>
 
       {/* Priority dot */}
@@ -61,13 +67,13 @@ export function TaskRow({ task, onToggle, onOpen }: TaskRowProps) {
         {task.title}
       </span>
 
-      {/* Labels — 12px minimum */}
+      {/* Labels — hidden on mobile, too cramped at 360px */}
       {task.labels?.map((label: unknown) => {
         const l = label as { id: number; color: string; title: string }
         return (
           <span
             key={l.id}
-            className="tag"
+            className="tag hidden sm:inline-flex"
             style={{ background: l.color + '25', color: l.color }}
           >
             {l.title}
@@ -75,16 +81,16 @@ export function TaskRow({ task, onToggle, onOpen }: TaskRowProps) {
         )
       })}
 
-      {/* Priority badge — show on hover */}
+      {/* Priority badge — show on hover, hidden on mobile */}
       {task.priority > 0 && (
-        <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="hidden sm:inline opacity-0 group-hover:opacity-100 transition-opacity">
           <PriorityBadge priority={task.priority} />
         </span>
       )}
 
-      {/* Assignee avatars — 20px, initials at 10px (decorative) */}
+      {/* Assignee avatars — hidden on mobile */}
       {task.assignees?.length > 0 && (
-        <div className="flex -space-x-1.5">
+        <div className="hidden sm:flex -space-x-1.5">
           {task.assignees.slice(0, 3).map((a: unknown) => {
             const assignee = a as { id: number; name?: string }
             return (
@@ -93,7 +99,7 @@ export function TaskRow({ task, onToggle, onOpen }: TaskRowProps) {
                 title={assignee.name}
                 className="w-5 h-5 rounded-full flex items-center justify-center font-bold text-white"
                 style={{
-                  fontSize: '9px',   /* intentionally tiny — decorative avatar initial */
+                  fontSize: '9px',
                   background: 'var(--accent)',
                   border: '1.5px solid var(--bg-base)',
                 }}

@@ -1,6 +1,6 @@
 'use client'
 import { useState, useRef, forwardRef } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/lib/auth-context'
@@ -15,7 +15,14 @@ const profileSchema = z.object({
 })
 const passwordSchema = z.object({
   current_password: z.string().min(1, 'Required'),
-  new_password:     z.string().min(8, 'Minimum 8 characters'),
+  new_password: z
+    .string()
+    .min(8,  'At least 8 characters')
+    .max(128, 'Maximum 128 characters')
+    .regex(/[A-Z]/,           'Must contain an uppercase letter')
+    .regex(/[a-z]/,           'Must contain a lowercase letter')
+    .regex(/[0-9]/,           'Must contain a number')
+    .regex(/[^A-Za-z0-9]/,   'Must contain a special character'),
   confirm_password: z.string(),
 }).refine(d => d.new_password === d.confirm_password, {
   message: 'Passwords do not match',
@@ -233,14 +240,40 @@ export default function SettingsPage() {
   )
 }
 
+// ── Password strength helpers ─────────────────────────────────────────────────
+const PW_REQUIREMENTS = [
+  { id: 'len',     label: 'At least 8 characters',      test: (v: string) => v.length >= 8 },
+  { id: 'upper',   label: 'One uppercase letter (A–Z)',  test: (v: string) => /[A-Z]/.test(v) },
+  { id: 'lower',   label: 'One lowercase letter (a–z)',  test: (v: string) => /[a-z]/.test(v) },
+  { id: 'number',  label: 'One number (0–9)',            test: (v: string) => /[0-9]/.test(v) },
+  { id: 'special', label: 'One special character (!@#…)',test: (v: string) => /[^A-Za-z0-9]/.test(v) },
+]
+
+function getStrength(pw: string) {
+  const passed = PW_REQUIREMENTS.filter(r => r.test(pw)).length
+  if (!pw) return 0
+  return passed   // 1-5
+}
+
+const STRENGTH_LABELS = ['', 'Very weak', 'Weak', 'Fair', 'Strong', 'Very strong']
+const STRENGTH_COLORS = ['', '#f87171', '#fb923c', '#facc15', '#4ade80', '#22c55e']
+
 // ── Password section ──────────────────────────────────────────────────────────
 function PasswordSection() {
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew,     setShowNew]     = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) })
+
+  const newPw = useWatch({ control, name: 'new_password', defaultValue: '' })
+  const strength = getStrength(newPw || '')
 
   const changePassword = useMutation({
     mutationFn: (data: PasswordForm) =>
@@ -261,36 +294,111 @@ function PasswordSection() {
 
   return (
     <form onSubmit={handleSubmit(d => changePassword.mutate(d))} className="space-y-4">
+
+      {/* Current password */}
       <SettingsField label="Current password" error={errors.current_password?.message}>
-        <SettingsInput
-          type="password"
-          {...register('current_password')}
-          placeholder="Your current password"
-          hasError={!!errors.current_password}
-        />
+        <div className="relative">
+          <SettingsInput
+            type={showCurrent ? 'text' : 'password'}
+            {...register('current_password')}
+            placeholder="Your current password"
+            hasError={!!errors.current_password}
+            style={{ paddingRight: '2.5rem' }}
+          />
+          <EyeToggle show={showCurrent} onToggle={() => setShowCurrent(s => !s)} />
+        </div>
       </SettingsField>
+
+      {/* New password */}
       <SettingsField label="New password" error={errors.new_password?.message}>
-        <SettingsInput
-          type="password"
-          {...register('new_password')}
-          placeholder="Minimum 8 characters"
-          hasError={!!errors.new_password}
-        />
+        <div className="relative">
+          <SettingsInput
+            type={showNew ? 'text' : 'password'}
+            {...register('new_password')}
+            placeholder="Min 8 chars, mixed case, number & symbol"
+            hasError={!!errors.new_password}
+            style={{ paddingRight: '2.5rem' }}
+          />
+          <EyeToggle show={showNew} onToggle={() => setShowNew(s => !s)} />
+        </div>
+
+        {/* Strength bar */}
+        {newPw && (
+          <div className="mt-2 space-y-1.5">
+            <div className="flex gap-1">
+              {[1,2,3,4,5].map(i => (
+                <div
+                  key={i}
+                  className="h-1 flex-1 rounded-full transition-all duration-300"
+                  style={{
+                    background: i <= strength ? STRENGTH_COLORS[strength] : 'var(--border)',
+                  }}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] font-semibold" style={{ color: STRENGTH_COLORS[strength] }}>
+              {STRENGTH_LABELS[strength]}
+            </p>
+
+            {/* Per-requirement checklist */}
+            <div className="grid grid-cols-1 gap-0.5 pt-0.5">
+              {PW_REQUIREMENTS.map(req => {
+                const ok = req.test(newPw)
+                return (
+                  <div key={req.id} className="flex items-center gap-1.5">
+                    <span style={{ color: ok ? '#4ade80' : 'var(--text-muted)', fontSize: '11px' }}>
+                      {ok ? '✓' : '○'}
+                    </span>
+                    <span
+                      className="text-[11px] transition-colors"
+                      style={{ color: ok ? '#4ade80' : 'var(--text-muted)' }}
+                    >
+                      {req.label}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </SettingsField>
+
+      {/* Confirm password */}
       <SettingsField label="Confirm new password" error={errors.confirm_password?.message}>
-        <SettingsInput
-          type="password"
-          {...register('confirm_password')}
-          placeholder="Repeat new password"
-          hasError={!!errors.confirm_password}
-        />
+        <div className="relative">
+          <SettingsInput
+            type={showConfirm ? 'text' : 'password'}
+            {...register('confirm_password')}
+            placeholder="Repeat new password"
+            hasError={!!errors.confirm_password}
+            style={{ paddingRight: '2.5rem' }}
+          />
+          <EyeToggle show={showConfirm} onToggle={() => setShowConfirm(s => !s)} />
+        </div>
       </SettingsField>
+
       <div className="pt-1">
         <SettingsButton loading={isSubmitting || changePassword.isPending}>
           Update password
         </SettingsButton>
       </div>
     </form>
+  )
+}
+
+// ── Eye toggle button ─────────────────────────────────────────────────────────
+function EyeToggle({ show, onToggle }: { show: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm transition-opacity"
+      style={{ color: 'var(--text-muted)', lineHeight: 1 }}
+      tabIndex={-1}
+      aria-label={show ? 'Hide password' : 'Show password'}
+    >
+      {show ? '🙈' : '👁'}
+    </button>
   )
 }
 

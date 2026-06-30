@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { useTask, useUpdateTask } from '@/lib/hooks/use-tasks'
 import type { Task } from '@/lib/hooks/use-tasks'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import { TiptapEditor }    from '@/components/ui/TiptapEditor'
 import { TaskAttachments } from './TaskAttachments'
 import { TaskComments }    from './TaskComments'
@@ -58,6 +59,7 @@ export function TaskDetailPanel({ task, projectId, onClose }: Props) {
   const { data: detail }    = useTask(task.id)
   const updateTask          = useUpdateTask(projectId)
   const { canEdit }         = usePermissions(projectId)
+  const isMobile            = useIsMobile()
   const [tab, setTab]       = useState('details')
   const [title, setTitle]   = useState(task.title)
   const descTimer           = useRef<NodeJS.Timeout | null>(null)
@@ -88,13 +90,27 @@ export function TaskDetailPanel({ task, projectId, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40"
-        style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose} />
+      {/* Backdrop — only on desktop; mobile panel is full-screen */}
+      {!isMobile && (
+        <div className="fixed inset-0 z-40"
+          style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose} />
+      )}
 
-      <div className="fixed right-0 top-0 h-full z-50 flex flex-col"
-        style={{ width: '440px', background: 'var(--bg-surface)',
-                 borderLeft: '1px solid var(--border)',
-                 animation: 'slideInRight .25s ease' }}>
+      <div
+        className="fixed z-50 flex flex-col"
+        style={isMobile ? {
+          // Mobile: full-screen, slides up from bottom
+          inset: 0,
+          background: 'var(--bg-surface)',
+          animation: 'slideUpFull .25s ease',
+        } : {
+          // Desktop: 440px side panel from right
+          right: 0, top: 0, height: '100%', width: '440px',
+          background: 'var(--bg-surface)',
+          borderLeft: '1px solid var(--border)',
+          animation: 'slideInRight .25s ease',
+        }}
+      >
 
         {/* ── Header ─────────────────────────────────────────── */}
         <div className="px-5 pt-4 pb-3 flex-shrink-0"

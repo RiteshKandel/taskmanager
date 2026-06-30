@@ -16,6 +16,7 @@ import { enUS } from 'date-fns/locale'
 
 import { tasksToEvents, CalendarEvent } from '@/lib/calendar-utils'
 import { useUpdateTask } from '@/lib/hooks/use-tasks'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import type { Task } from '@/lib/hooks/use-tasks'
 import { CalendarToolbar } from './CalendarToolbar'
 import { CalendarEventCard } from './CalendarEventCard'
@@ -341,7 +342,10 @@ function CustomWeekView({
 
 // ── Main CalendarView ────────────────────────────────────────────────────────
 export function CalendarView({ tasks, projectId, canEdit }: CalendarViewProps) {
-  const [currentView, setCurrentView] = useState<string>(Views.WEEK)
+  const isMobile = useIsMobile()
+  const [currentView, setCurrentView] = useState<string>(
+    isMobile ? Views.DAY : Views.WEEK
+  )
   const [currentDate, setCurrentDate] = useState(new Date())
   const [slotInfo, setSlotInfo]       = useState<{ start: Date; end: Date } | null>(null)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -421,8 +425,11 @@ export function CalendarView({ tasks, projectId, canEdit }: CalendarViewProps) {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex flex-col h-full">
-        <CalendarToolbar date={currentDate} view={currentView}
-          onNavigate={setCurrentDate} onView={setCurrentView} />
+        <CalendarToolbar
+          date={currentDate} view={currentView}
+          onNavigate={setCurrentDate} onView={setCurrentView}
+          availableViews={isMobile ? [Views.DAY, Views.MONTH] : [Views.MONTH, Views.WEEK, Views.DAY]}
+        />
 
         <div className="flex-1 overflow-hidden" style={{ padding: '0 12px 12px', minHeight: 0 }}>
 

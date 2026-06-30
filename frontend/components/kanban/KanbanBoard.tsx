@@ -9,10 +9,11 @@ import {
   closestCorners,
 } from '@dnd-kit/core'
 import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
 import { useBulkUpdateTasks } from '@/lib/hooks/use-tasks'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import type { Task } from '@/lib/hooks/use-tasks'
 
 const COLUMNS = [
@@ -28,17 +29,25 @@ interface KanbanBoardProps {
   canEdit?: boolean
 }
 
-export function KanbanBoard({ tasks, projectId, onOpenTask }: KanbanBoardProps) {
+export function KanbanBoard({ tasks, projectId, onOpenTask, canEdit }: KanbanBoardProps) {
   const [localTasks, setLocalTasks] = useState<Task[]>(tasks)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
-  const bulkUpdate = useBulkUpdateTasks(projectId)
+  const [activeCol, setActiveCol]   = useState(0)
+  const bulkUpdate  = useBulkUpdateTasks(projectId)
+  const isMobile    = useIsMobile()
+  const scrollRef   = useRef<HTMLDivElement>(null)
 
-  // Keep local state in sync when parent data changes (e.g. after a background refetch).
+  // Keep local state in sync when parent data changes
   useEffect(() => setLocalTasks(tasks), [tasks])
 
-  // PointerSensor requires 8px movement before a drag starts to prevent accidental drags on click.
+  // Long-press on mobile prevents accidental drag during swipe-scroll;
+  // 8px distance threshold on desktop for instant response
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: isMobile
+        ? { delay: 150, tolerance: 5 }   // hold briefly to start drag
+        : { distance: 8 },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -46,6 +55,12 @@ export function KanbanBoard({ tasks, projectId, onOpenTask }: KanbanBoardProps) 
     localTasks.filter(t => t.status === status && !t.parent)
               .sort((a, b) => a.position - b.position),
   [localTasks])
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return
+    const { scrollLeft, clientWidth } = scrollRef.current
+    setActiveCol(Math.round(scrollLeft / (clientWidth * 0.82)))
+  }
 
   function handleDragStart({ active }: any) {
     const task = localTasks.find(t => t.id === active.id)
@@ -116,17 +131,52 @@ export function KanbanBoard({ tasks, projectId, onOpenTask }: KanbanBoardProps) 
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-4 p-6 h-full overflow-x-auto" style={{ background: 'var(--bg-base)' }}>
+      {/* Columns container — scroll-snap on mobile for intentional swipe */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="flex gap-3 md:gap-4 p-3 md:p-6 h-full overflow-x-auto"
+        style={{
+          background: 'var(--bg-base)',
+          scrollSnapType: isMobile ? 'x mandatory' : undefined,
+          WebkitOverflowScrolling: 'touch',
+        }}
+      >
         {COLUMNS.map(col => (
-          <KanbanColumn
+          <div
             key={col.id}
-            column={col}
-            tasks={tasksByStatus(col.id)}
-            projectId={projectId}
-            onOpenTask={onOpenTask}
-          />
+            className="flex-shrink-0"
+            style={{
+              // Mobile: 82vw so next column peeks; desktop: fixed 280px
+              width: isMobile ? 'min(82vw, 280px)' : '280px',
+              scrollSnapAlign: isMobile ? 'start' : undefined,
+            }}
+          >
+            <KanbanColumn
+              column={col}
+              tasks={tasksByStatus(col.id)}
+              projectId={projectId}
+              onOpenTask={onOpenTask}
+            />
+          </div>
         ))}
       </div>
+
+      {/* Scroll position dots — mobile only */}
+      {isMobile && (
+        <div className="flex justify-center gap-1.5 py-2 flex-shrink-0" style={{ background: 'var(--bg-base)' }}>
+          {COLUMNS.map((_, i) => (
+            <div
+              key={i}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{
+                width: activeCol === i ? '18px' : '6px',
+                background: activeCol === i ? 'var(--accent)' : 'var(--bg-active)',
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       <DragOverlay>
         {activeTask ? <KanbanCard task={activeTask} isOverlay /> : null}
