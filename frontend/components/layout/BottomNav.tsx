@@ -5,12 +5,9 @@ const ITEMS = [
   { key: 'list',     icon: '≡',  label: 'List'  },
   { key: 'kanban',   icon: '⊞',  label: 'Board' },
   { key: 'calendar', icon: '📅', label: 'Cal'   },
-  { key: 'forum',    icon: '💬', label: 'Forum' },
 ]
 
-interface Props { onForum: () => void }
-
-export function BottomNav({ onForum }: Props) {
+export function BottomNav() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const view         = searchParams.get('view') || 'list'
@@ -26,20 +23,14 @@ export function BottomNav({ onForum }: Props) {
       }}
     >
       {ITEMS.map(item => {
-        const isView  = item.key !== 'forum'
-        const isActive = isView ? view === item.key : false
-
+        const isActive = view === item.key
         return (
           <button
             key={item.key}
-            onClick={() =>
-              isView
-                ? router.replace(`?view=${item.key}`)
-                : onForum()
-            }
+            onClick={() => router.replace(`?view=${item.key}`)}
             className="flex-1 flex flex-col items-center justify-center gap-0.5"
           >
-            <span style={{ fontSize: '17px', opacity: isActive || (!isView) ? 1 : 0.45 }}>
+            <span style={{ fontSize: '17px', opacity: isActive ? 1 : 0.45 }}>
               {item.icon}
             </span>
             <span

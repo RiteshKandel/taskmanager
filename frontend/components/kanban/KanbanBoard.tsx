@@ -59,7 +59,8 @@ export function KanbanBoard({ tasks, projectId, onOpenTask, canEdit }: KanbanBoa
   const handleScroll = () => {
     if (!scrollRef.current) return
     const { scrollLeft, clientWidth } = scrollRef.current
-    setActiveCol(Math.round(scrollLeft / (clientWidth * 0.82)))
+    // For mobile, column width is 85vw + 12px gap
+    setActiveCol(Math.round(scrollLeft / (clientWidth * 0.85)))
   }
 
   function handleDragStart({ active }: any) {
@@ -147,8 +148,8 @@ export function KanbanBoard({ tasks, projectId, onOpenTask, canEdit }: KanbanBoa
             key={col.id}
             className="flex-shrink-0"
             style={{
-              // Mobile: 82vw so next column peeks; desktop: fixed 280px
-              width: isMobile ? 'min(82vw, 280px)' : '280px',
+              // Mobile: 85vw so next column peeks; desktop: fixed 320px
+              width: isMobile ? '85vw' : '320px',
               scrollSnapAlign: isMobile ? 'start' : undefined,
             }}
           >

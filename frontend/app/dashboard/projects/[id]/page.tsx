@@ -67,7 +67,6 @@ function ProjectPageContent() {
   const qc                            = useQueryClient()
   const [newTitle, setNewTitle]       = useState('')
   const [selectedTask, setSelected]   = useState<Task | null>(null)
-  const [showForum, setShowForum]     = useState(false)
   const inputRef                      = useRef<HTMLInputElement>(null)
 
   // Open task panel if ?task=<id> is in the URL (set by CommandPalette)
@@ -159,17 +158,8 @@ function ProjectPageContent() {
       {/* Bottom nav — mobile only, replaces topbar view toggle */}
       {isMobile && (
         <Suspense fallback={null}>
-          <BottomNav onForum={() => setShowForum(true)} />
+          <BottomNav />
         </Suspense>
-      )}
-
-      {/* Project forum panel — mobile triggered by BottomNav, desktop by topbar */}
-      {showForum && (
-        <ProjectForumPanel
-          projectId={projectId}
-          projectTitle={project?.title}
-          onClose={() => setShowForum(false)}
-        />
       )}
 
       {selectedTask && (

@@ -29,7 +29,7 @@ export function KanbanColumn({ column, tasks, projectId, onOpenTask }: KanbanCol
   }
 
   return (
-    <div className="flex flex-col w-80 flex-shrink-0 h-full">
+    <div className="flex flex-col w-full flex-shrink-0 h-full">
       {/* Column header */}
       <div className="flex items-center gap-2 mb-3 px-1">
         <span

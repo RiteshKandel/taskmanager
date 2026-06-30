@@ -321,6 +321,7 @@ function CustomWeekView({
 }: { date: Date; tasks: Task[]; onTaskClick: (t: Task) => void; onAddClick: (d: Date) => void; canEdit: boolean }) {
   const weekStart = soW(date, { weekStartsOn: 1 })
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
+  const isMobile = useIsMobile()
 
   return (
     <div className="flex h-full overflow-hidden" style={{ minHeight: 0 }}>
@@ -328,7 +329,9 @@ function CustomWeekView({
         const dayTasks = getTasksForDay(tasks, d)
         return (
           <div key={i} className="flex-1 flex flex-col overflow-hidden"
-            style={{ borderLeft: i > 0 ? '1px solid var(--border)' : 'none' }}>
+            style={{ 
+              borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+            }}>
             <DroppableDayColumn
               date={d} tasks={dayTasks}
               onTaskClick={onTaskClick} onAddClick={onAddClick} canEdit={canEdit}
@@ -428,7 +431,7 @@ export function CalendarView({ tasks, projectId, canEdit }: CalendarViewProps) {
         <CalendarToolbar
           date={currentDate} view={currentView}
           onNavigate={setCurrentDate} onView={setCurrentView}
-          availableViews={isMobile ? [Views.DAY, Views.MONTH] : [Views.MONTH, Views.WEEK, Views.DAY]}
+          availableViews={[Views.MONTH, Views.WEEK, Views.DAY]}
         />
 
         <div className="flex-1 overflow-hidden" style={{ padding: '0 12px 12px', minHeight: 0 }}>
